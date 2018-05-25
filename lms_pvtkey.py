@@ -4,7 +4,7 @@ from utils import sha256_hash, u32str, hex_u32_to_int
 from lms_sig_funcs import serialize_lms_sig
 from lms_pubkey import LmsPublicKey
 from lmots_pvtkey import LmotsPrivateKey
-from printutl import PrintUtl
+from print_util import PrintUtl
 
 
 class LmsPrivateKey(object):
@@ -12,7 +12,7 @@ class LmsPrivateKey(object):
     Leighton-Micali Signature Private Key
     """
     def __init__(self, lms_type=lms_sha256_m32_h10, lmots_type=lmots_sha256_n32_w8,
-                 SEED=None, I=None, qinit=0, nodes=None, pub=None):
+                 seed=None, I=None, q_init=0, nodes=None, pub=None):
         n, p, w, ls = lmots_params[lmots_type]
         m, h, LenI = lms_params[lms_type]
         self.lms_type = lms_type
@@ -25,31 +25,36 @@ class LmsPrivateKey(object):
             if len(I) != LenI:
                 raise ValueError(err_bad_length, str(len(I)))
             self.I = I
-        if SEED is None:
-            SEED = entropySource.read(n)
+        if seed is None:
+            seed = entropySource.read(n)
         else:
-            if len(SEED) != n:
-                raise ValueError(err_bad_length, str(len(SEED)))
-        self.SEED = SEED
+            if len(seed) != n:
+                raise ValueError(err_bad_length, str(len(seed)))
+        self.SEED = seed
 
+        # TODO: this should be an explicit call and not implicit based on parameters
+        # if no key nodes are provided then generate a new key pair
         if nodes is None:
-            for q in xrange(0, 2**h):
-                S = self.I + u32str(q)
-                ots_priv = LmotsPrivateKey(S=S, SEED=SEED, lmots_type=lmots_type)
-                ots_pub = ots_priv.get_public_key()
+            # Q: instance number
+            # w: Winternitz parameter
+            # I: identity
+            for Q in xrange(0, 2**h):
+                s = self.I + u32str(Q)
+                ots_priv = LmotsPrivateKey(s=s, seed=seed, lmots_type=lmots_type)
+                ots_pub = ots_priv.generate_public_key()
                 self.priv.append(ots_priv)
                 self.pub.append(ots_pub)
         else:
             self.nodes = nodes
             self.pub = pub
-        self.leaf_num = qinit
+        self.leaf_num = q_init
         self.nodes = {}
         self.lms_pub_value = self.T(1)
 
     def get_path(self, node_num):
         path = list()
         while node_num > 1:
-            if (node_num % 2):
+            if node_num % 2:
                 path.append(self.nodes[node_num - 1])
             else:
                 path.append(self.nodes[node_num + 1])
@@ -125,10 +130,10 @@ class LmsPrivateKey(object):
         lmots_type = hex_u32_to_int(hex_value[4:8])
         n, p, w, ls = lmots_params[lmots_type]
         m, h, LenI = lms_params[lms_type]
-        SEED = hex_value[8:8 + n]
+        seed = hex_value[8:8 + n]
         I = hex_value[8 + n:8 + n + LenI]
         q = hex_u32_to_int(hex_value[8 + n + LenI:8 + n + LenI + 4])
-        return cls(lms_type, lmots_type, SEED, I, q)
+        return cls(lms_type, lmots_type, seed, I, q)
 
     @classmethod
     def deserialize_print_hex(cls, hex_value):
@@ -138,12 +143,12 @@ class LmsPrivateKey(object):
         lmots_type = hex_u32_to_int(hex_value[4:8])
         n, p, w, ls = lmots_params[lmots_type]
         m, h, LenI = lms_params[lms_type]
-        SEED = hex_value[8:8 + n]
+        seed = hex_value[8:8 + n]
         I = hex_value[8 + n:8 + n + LenI]
         q = hex_u32_to_int(hex_value[8 + n + LenI:8 + n + LenI + 4])
         PrintUtl.print_hex("lms_type", u32str(lms_type))
         PrintUtl.print_hex("lmots_type", u32str(lmots_type))
-        PrintUtl.print_hex("SEED", SEED)
+        PrintUtl.print_hex("seed", seed)
         PrintUtl.print_hex("I", I)
         PrintUtl.print_hex("leaf_num", u32str(q))
         PrintUtl.print_line()

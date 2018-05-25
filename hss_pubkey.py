@@ -2,7 +2,7 @@ from need_to_sort import err_list, VALID, INVALID_HSS_LEVEL_ERR, INVALID_WITH_RE
 from utils import u32str, hex_u32_to_int
 from sig_tests import deserialize_hss_sig
 from lms_pubkey import LmsPublicKey
-from printutl import PrintUtl
+from print_util import PrintUtl
 
 
 class HssPublicKey(object):
@@ -38,9 +38,9 @@ class HssPublicKey(object):
         return u32str(self.levels) + self.pub1.serialize()
 
     @classmethod
-    def deserialize(cls, buffer):
-        levels = hex_u32_to_int(buffer[0:4])
-        root_pub = LmsPublicKey.deserialize(buffer[4:])
+    def deserialize(cls, hex_value):
+        levels = hex_u32_to_int(hex_value[0:4])
+        root_pub = LmsPublicKey.deserialize(hex_value[4:])
         return cls(root_pub, levels)
 
     def print_hex(self):

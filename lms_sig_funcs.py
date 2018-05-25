@@ -1,7 +1,7 @@
 from need_to_sort import err_unknown_typecode, err_bad_value, lmots_params, lms_params, lms_name
 from utils import u32str, hex_u32_to_int, hex_u32_to_int, serialize_array
 from lmots_sig import LmotsSignature
-from printutl import PrintUtl
+from print_util import PrintUtl
 
 
 def serialize_lms_sig(typecode, q, lmots_sig, path):
@@ -45,7 +45,7 @@ def parse_lms_sig(hex_value):
         m, h, LenI = lms_params[lms_type]
     else:
         raise ValueError(err_unknown_typecode)
-    pos = pos + 4 + h*m
+    pos = pos + 4 + h * m
     return hex_value[0:pos], hex_value[pos:]
 
 

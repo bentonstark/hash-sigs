@@ -2,10 +2,10 @@ from Crypto.Hash import SHA256
 
 from need_to_sort import err_unknown_typecode, err_bad_length, VALID, INVALID, D_ITER, D_PBLC, D_MESG, lmots_params, \
     lmots_name
-from merkle_checksum import coef, checksum
+from merkle import Merkle
 from lmots_sig import LmotsSignature
 from utils import u32str, hex_u32_to_int, sha256_hash, u16str, u8str
-from printutl import PrintUtl
+from print_util import PrintUtl
 
 
 class LmotsPublicKey:
@@ -56,13 +56,14 @@ def lmots_sig_to_pub(sig, S, lmots_type, message):
         raise ValueError(err_unknown_typecode)
     n, p, w, ls = lmots_params[lmots_type]
     hashQ = sha256_hash(S + signature.C + message + D_MESG)
-    V = hashQ + checksum(hashQ, w, ls)
+    V = hashQ + Merkle.checksum(hashQ, w, ls)
     hash = SHA256.new()
     hash.update(S)
     for i, y in enumerate(signature.y):
         tmp = y
-        for j in xrange(coef(V, i, w), 2**w - 1):
+        for j in xrange(Merkle.coef(V, i, w), 2**w - 1):
             tmp = sha256_hash(S + tmp + u16str(i) + u8str(j) + D_ITER)
         hash.update(tmp)
     hash.update(D_PBLC)
     return hash.digest()
+

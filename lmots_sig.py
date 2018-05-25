@@ -1,9 +1,9 @@
 from need_to_sort import err_unknown_typecode, err_bad_length, lmots_sha256_n32_w8, lmots_params, lmots_name
 from utils import u32str, hex_u32_to_int, serialize_array
-from printutl import PrintUtl
+from print_util import PrintUtl
 
 
-class LmotsSignature():
+class LmotsSignature:
     """
     Leighton-Micali One Time Signature
     """
@@ -16,19 +16,19 @@ class LmotsSignature():
         return u32str(self.type) + self.C + serialize_array(self.y)
 
     @classmethod
-    def deserialize(cls, buffer):
-        lmots_type = hex_u32_to_int(buffer[0:4])
+    def deserialize(cls, hex_value):
+        lmots_type = hex_u32_to_int(hex_value[0:4])
         if lmots_type in lmots_params:
             n, p, w, ls = lmots_params[lmots_type]
         else:
             raise ValueError(err_unknown_typecode, str(lmots_type))
-        if len(buffer) != cls.bytes(lmots_type):
+        if len(hex_value) != cls.bytes(lmots_type):
             raise ValueError(err_bad_length)
-        C = buffer[4:n+4]
+        C = hex_value[4:n + 4]
         y = list()
         pos = n+4
         for i in xrange(0, p):
-            y.append(buffer[pos:pos+n])
+            y.append(hex_value[pos:pos + n])
             pos = pos + n
         return cls(C, y, lmots_type)
 

@@ -1,23 +1,7 @@
 from Crypto import Random
 
 
-
-# Diversification constants
-#
-
-# LMOTS typecodes and parameters
-#
-
-# LMS typecodes and parameters
-#
-
-
-# ***************************************************************
-#                                                               |
-#                   LM-OTS functionality                        |
-#                                                               |
-# ***************************************************************
-
+entropySource = Random.new()
 
 # return codes
 err_private_key_exhausted = 'error: attempted overuse of private key'
@@ -63,9 +47,10 @@ D_PBLC = chr(0x01)  # when computing the hash of all of the iterates in the LM-O
 D_MESG = chr(0x02)  # when computing the hash of the message in the LMOTS algorithms
 D_LEAF = chr(0x03)  # when computing the hash of the leaf of an LMS tree
 D_INTR = chr(0x04)  # when computing the hash of an interior node of an LMS tree
-D_PRG  = chr(0x05)  # when computing LMS private keys pseudo-randomly
+D_PRG = chr(0x05)  # when computing LMS private keys pseudo-randomly
 
 
+###################################
 # LMOTS typecodes and parameters
 lmots_sha256_n32_w1 = 0x00000001
 lmots_sha256_n32_w2 = 0x00000002
@@ -73,7 +58,7 @@ lmots_sha256_n32_w4 = 0x00000003
 lmots_sha256_n32_w8 = 0x00000004
 
 lmots_params = {
-    #                     n   p    w  ls
+    #                      n    p  w  ls
     lmots_sha256_n32_w1: (32, 265, 1, 7),
     lmots_sha256_n32_w2: (32, 133, 2, 6),
     lmots_sha256_n32_w4: (32,  67, 4, 4),
@@ -86,6 +71,10 @@ lmots_name = {
     lmots_sha256_n32_w4: "LMOTS_SHA256_N32_W4",
     lmots_sha256_n32_w8: "LMOTS_SHA256_N32_W8"
 }
+###################################
+
+
+###################################
 lms_sha256_m32_h05 = 0x00000005
 lms_sha256_m32_h10 = 0x00000006
 lms_sha256_m32_h15 = 0x00000007
@@ -93,7 +82,7 @@ lms_sha256_m32_h20 = 0x00000008
 lms_sha256_m32_h25 = 0x00000009
 
 lms_params = {
-    #                    m,  h,  LenI
+    #                     m,  h, LenI
     lms_sha256_m32_h05: (32,  5, 64),
     lms_sha256_m32_h10: (32, 10, 64),
     lms_sha256_m32_h15: (32, 15, 64),
@@ -108,5 +97,6 @@ lms_name = {
     lms_sha256_m32_h20: "LMS_SHA256_M32_H20",
     lms_sha256_m32_h25: "LMS_SHA256_M32_H25"
 }
+###################################
 
-entropySource = Random.new()
+

@@ -3,7 +3,7 @@ from utils import u32str, hex_u32_to_int
 from sig_tests import serialize_hss_sig
 from hss_pubkey import HssPublicKey
 from lms_pvtkey import LmsPrivateKey
-from printutl import PrintUtl
+from print_util import PrintUtl
 
 
 class HssPrivateKey(object):

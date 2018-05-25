@@ -42,15 +42,12 @@
 
 import sys
 import os.path
-
-# error codes
-#
 from hss_pubkey import HssPublicKey
 from hss_pvtkey import HssPrivateKey
 from lmots_pvtkey import LmotsPrivateKey
 from lms_pvtkey import LmsPrivateKey
 from need_to_sort import VALID, retcode_get_string
-from printutl import PrintUtl
+from print_util import PrintUtl
 from sig_tests import print_hss_sig, checksum_test, ntimesig_test
 from utils import sha256_hash
 
@@ -64,7 +61,6 @@ from utils import sha256_hash
 #   array of l-2 signed_public_keys                             |
 #   signature                                                   |
 # ***************************************************************
-
 
 
 def calc_check_string(path):
