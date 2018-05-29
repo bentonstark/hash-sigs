@@ -1,4 +1,4 @@
-from need_to_sort import err_private_key_exhausted, err_bad_length, D_LEAF, D_INTR, lmots_sha256_n32_w8, lmots_params, \
+from need_to_sort import err_private_key_exhausted, err_bad_length, D_LEAF, D_INTR, LMOTS_SHA256_N32_W8, lmots_params, \
     lmots_name, lms_sha256_m32_h10, lms_params, lms_name, entropySource
 from utils import sha256_hash, u32str, hex_u32_to_int
 from lms_sig_funcs import serialize_lms_sig
@@ -11,45 +11,55 @@ class LmsPrivateKey(object):
     """
     Leighton-Micali Signature Private Key
     """
-    def __init__(self, lms_type=lms_sha256_m32_h10, lmots_type=lmots_sha256_n32_w8,
+    def __init__(self, lms_type=lms_sha256_m32_h10, lmots_type=LMOTS_SHA256_N32_W8,
                  seed=None, I=None, q_init=0, nodes=None, pub=None):
-        n, p, w, ls = lmots_params[lmots_type]
-        m, h, LenI = lms_params[lms_type]
+        #n, p, w, ls = lmots_params[lmots_type]
+        #m, h, LenI = lms_params[lms_type]
         self.lms_type = lms_type
         self.lmots_type = lmots_type
-        self.priv = list()
-        self.pub = list()
-        if I is None:
-            self.I = entropySource.read(LenI)
-        else:
-            if len(I) != LenI:
-                raise ValueError(err_bad_length, str(len(I)))
-            self.I = I
-        if seed is None:
-            seed = entropySource.read(n)
-        else:
-            if len(seed) != n:
-                raise ValueError(err_bad_length, str(len(seed)))
+        #if I is None:
+        #    self.I = entropySource.read(LenI)
+        #else:
+        #    if len(I) != LenI:
+        #        raise ValueError(err_bad_length, str(len(I)))
+        #    self.I = I
         self.SEED = seed
 
-        # TODO: this should be an explicit call and not implicit based on parameters
-        # if no key nodes are provided then generate a new key pair
-        if nodes is None:
-            # Q: instance number
-            # w: Winternitz parameter
-            # I: identity
-            for Q in xrange(0, 2**h):
-                s = self.I + u32str(Q)
-                ots_priv = LmotsPrivateKey(s=s, seed=seed, lmots_type=lmots_type)
-                ots_pub = ots_priv.generate_public_key()
-                self.priv.append(ots_priv)
-                self.pub.append(ots_pub)
-        else:
-            self.nodes = nodes
-            self.pub = pub
+        self.nodes = nodes
+        self.pub = pub
         self.leaf_num = q_init
         self.nodes = {}
         self.lms_pub_value = self.T(1)
+
+    def generate_key_pair(self, lms_type=lms_sha256_m32_h10, lmots_type=LMOTS_SHA256_N32_W8, seed=None, var_I=None):
+
+        n, p, w, ls = lmots_params[lmots_type]
+        m, h, len_I = lms_params[lms_type]
+
+        if seed is not None and len(seed) != n:
+            raise ValueError(err_bad_length, str(len(seed)))
+        if var_I is not None and len(var_I) != len_I:
+            raise ValueError(err_bad_length, str(len(var_I)))
+
+        if seed is None:
+            seed = entropySource.read(n)
+        if var_I is None:
+            var_I = entropySource.read(len_I)
+
+        priv = list()
+        pub = list()
+
+        # Q: instance number
+        # w: Winternitz parameter
+        # I: identity
+        for Q in xrange(0, 2 ** h):
+            s = var_I + u32str(Q)
+            ots_priv = LmotsPrivateKey(s=s, seed=seed, lmots_type=lmots_type)
+            ots_pub = ots_priv.generate_public_key()
+            priv.append(ots_priv)
+            pub.append(ots_pub)
+
+        return pub, priv
 
     def get_path(self, node_num):
         path = list()

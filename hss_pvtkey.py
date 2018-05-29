@@ -1,4 +1,4 @@
-from need_to_sort import err_private_key_exhausted, lmots_sha256_n32_w1, lmots_sha256_n32_w8, lms_sha256_m32_h05
+from need_to_sort import err_private_key_exhausted, lmots_sha256_n32_w1, LMOTS_SHA256_N32_W8, LMS_SHA256_M32_H05
 from utils import u32str, hex_u32_to_int
 from sig_tests import serialize_hss_sig
 from hss_pubkey import HssPublicKey
@@ -10,11 +10,12 @@ class HssPrivateKey(object):
     """
     Hierarchical Signature System Private Key
     """
-    def __init__(self, levels=2, lms_type=lms_sha256_m32_h05, lmots_type=lmots_sha256_n32_w8, prv0=None):
+    def __init__(self, levels=2, lms_type=LMS_SHA256_M32_H05, lmots_type=LMOTS_SHA256_N32_W8, prv0=None):
         self.levels = levels
         self.prv = list()
         self.pub = list()
         self.sig = list()
+
         if prv0 is None:
             prv0 = LmsPrivateKey(lms_type=lms_type, lmots_type=lmots_type)
         self.prv.append(prv0)
@@ -91,7 +92,7 @@ class HssPrivateKey(object):
     def get_param_list(cls):
         param_list = list()
         for x in [ lmots_sha256_n32_w1 ]: # lmots_params.keys():
-            for y in [lms_sha256_m32_h05]: # lms_params.keys():
+            for y in [LMS_SHA256_M32_H05]: # lms_params.keys():
                 for l in [2,3]:
                     param_list.append({'lmots_type': x, 'lms_type': y, 'levels': l})
         return param_list
