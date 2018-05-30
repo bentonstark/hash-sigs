@@ -1,4 +1,4 @@
-from need_to_sort import err_unknown_typecode, err_bad_value, lmots_params, lms_params, lms_name
+from need_to_sort import err_unknown_typecode, err_bad_value, lms_params, lms_name
 from utils import u32str, hex_u32_to_int, hex_u32_to_int, serialize_array
 from lmots_sig import LmotsSignature
 from print_util import PrintUtl

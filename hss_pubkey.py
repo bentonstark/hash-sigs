@@ -1,4 +1,4 @@
-from need_to_sort import err_list, VALID, INVALID_HSS_LEVEL_ERR, INVALID_WITH_REASON
+from need_to_sort import err_list, INVALID_HSS_LEVEL_ERR, INVALID_WITH_REASON
 from utils import u32str, hex_u32_to_int
 from sig_tests import deserialize_hss_sig
 from lms_pubkey import LmsPublicKey
@@ -25,7 +25,7 @@ class HssPublicKey(object):
                 sig = sig_list[i]
                 msg = pub_list[i]
                 result = key.verify(msg, sig)
-                if result != VALID:
+                if result is False:
                     return result
                 key = LmsPublicKey.deserialize(msg)
             return key.verify(message, lms_sig)

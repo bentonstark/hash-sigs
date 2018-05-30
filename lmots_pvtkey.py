@@ -1,7 +1,5 @@
-from Crypto.Hash import SHA256
 
-from need_to_sort import err_private_key_exhausted, D_ITER, D_PBLC, D_MESG, D_PRG, LMOTS_SHA256_N32_W8, lmots_params, \
-    lmots_name, entropySource
+from need_to_sort import err_private_key_exhausted, D_ITER, D_PBLC, D_MESG, D_PRG, entropySource
 from merkle import Merkle
 from utils import sha256_hash, u32str, u16str, u8str
 from lmots_pubkey import LmotsPublicKey
@@ -19,23 +17,6 @@ class LmotsPrivateKey:
         self.s = s
         self.seed = seed
         self.signatures_remaining = signatures_remaining
-
-    # Algorithm 3: Generating a Signature from a Private Key and a Message
-    def sign(self, message):
-        if self.signatures_remaining != 1:
-            raise ValueError(err_private_key_exhausted)
-        n, p, w, ls = lmots_params[self.type]
-        C = entropySource.read(n)
-        hashQ = sha256_hash(self.s + C + message + D_MESG)
-        V = hashQ + Merkle.checksum(hashQ, w, ls)
-        y = list()
-        for i, x in enumerate(self.raw_key):
-            tmp = x
-            for j in xrange(0, Merkle.coef(V, i, w)):
-                tmp = sha256_hash(self.s + tmp + u16str(i) + u8str(j) + D_ITER)
-            y.append(tmp)
-        self.signatures_remaining = 0
-        return LmotsSignature(C, y, self.type).serialize()
 
     def print_hex(self):
         PrintUtl.print_line()

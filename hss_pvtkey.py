@@ -1,4 +1,4 @@
-from need_to_sort import err_private_key_exhausted, lmots_sha256_n32_w1, LMOTS_SHA256_N32_W8, LMS_SHA256_M32_H05
+from need_to_sort import err_private_key_exhausted, LMS_SHA256_M32_H05
 from utils import u32str, hex_u32_to_int
 from sig_tests import serialize_hss_sig
 from hss_pubkey import HssPublicKey

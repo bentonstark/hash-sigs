@@ -1,6 +1,5 @@
-from need_to_sort import err_unknown_typecode, VALID, INVALID_LMS_TYPE_ERR, INVALID_LMS_PUB_ERR, D_LEAF, D_INTR, \
-    lmots_params, lmots_name, lms_params, lms_name
-from lmots_pubkey import lmots_sig_to_pub
+from need_to_sort import err_unknown_typecode, INVALID_LMS_TYPE_ERR, INVALID_LMS_PUB_ERR, D_LEAF, D_INTR, \
+    lms_params, lms_name
 from utils import sha256_hash, u32str, hex_u32_to_int
 from lms_sig_funcs import deserialize_lms_sig
 from print_util import PrintUtl
@@ -33,15 +32,14 @@ class LmsPublicKey(object):
                 tmp = sha256_hash(self.I + tmp + path_value.next() + u32str(node_num / 2) + D_INTR)
             node_num = node_num / 2
         if tmp == self.value:
-            return VALID
+            return True
         else:
             return INVALID_LMS_PUB_ERR
 
     def serialize(self):
         return u32str(self.lms_type) + u32str(self.lmots_type) + self.I + self.value
 
-    @classmethod
-    def parse(cls, hex_value):
+    def parse(self, hex_value):
         lms_type = hex_u32_to_int(hex_value[0:4])
         if lms_type in lms_params:
             m, h, LenI = lms_params[lms_type]

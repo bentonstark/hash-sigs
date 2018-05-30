@@ -1,6 +1,5 @@
 
 from lmots import LmotsType
-from need_to_sort import err_unknown_typecode, err_bad_length
 from utils import u32str, hex_u32_to_int
 from print_util import PrintUtl
 

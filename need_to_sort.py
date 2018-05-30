@@ -71,28 +71,28 @@ D_PRG = chr(0x05)  # when computing LMS private keys pseudo-randomly
 
 
 ###################################
-LMS_SHA256_M32_H05 = 0x00000005
-lms_sha256_m32_h10 = 0x00000006
-lms_sha256_m32_h15 = 0x00000007
-lms_sha256_m32_h20 = 0x00000008
-lms_sha256_m32_h25 = 0x00000009
-
-lms_params = {
-    #                     m,  h, LenI
-    LMS_SHA256_M32_H05: (32, 5, 64),
-    lms_sha256_m32_h10: (32, 10, 64),
-    lms_sha256_m32_h15: (32, 15, 64),
-    lms_sha256_m32_h20: (32, 20, 64),
-    lms_sha256_m32_h25: (32, 25, 64)
-}
-
-lms_name = {
-    LMS_SHA256_M32_H05: "LMS_SHA256_M32_H5",
-    lms_sha256_m32_h10: "LMS_SHA256_M32_H10",
-    lms_sha256_m32_h15: "LMS_SHA256_M32_H15",
-    lms_sha256_m32_h20: "LMS_SHA256_M32_H20",
-    lms_sha256_m32_h25: "LMS_SHA256_M32_H25"
-}
+# LMS_SHA256_M32_H05 = 0x00000005
+# lms_sha256_m32_h10 = 0x00000006
+# lms_sha256_m32_h15 = 0x00000007
+# lms_sha256_m32_h20 = 0x00000008
+# lms_sha256_m32_h25 = 0x00000009
+#
+# lms_params = {
+#   #                     m,  h, LenI
+#   LMS_SHA256_M32_H05: (32, 5, 64),
+#   lms_sha256_m32_h10: (32, 10, 64),
+#   lms_sha256_m32_h15: (32, 15, 64),
+#   lms_sha256_m32_h20: (32, 20, 64),
+#   lms_sha256_m32_h25: (32, 25, 64)
+# }#
+#
+# lms_name = {
+#     LMS_SHA256_M32_H05: "LMS_SHA256_M32_H5",
+#     lms_sha256_m32_h10: "LMS_SHA256_M32_H10",
+#     lms_sha256_m32_h15: "LMS_SHA256_M32_H15",
+#     lms_sha256_m32_h20: "LMS_SHA256_M32_H20",
+#     lms_sha256_m32_h25: "LMS_SHA256_M32_H25"
+# }
 ###################################
 
 

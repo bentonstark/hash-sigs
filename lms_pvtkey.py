@@ -1,5 +1,4 @@
-from need_to_sort import err_private_key_exhausted, err_bad_length, D_LEAF, D_INTR, LMOTS_SHA256_N32_W8, lmots_params, \
-    lmots_name, lms_sha256_m32_h10, lms_params, lms_name, entropySource
+from need_to_sort import err_private_key_exhausted, err_bad_length, D_LEAF, D_INTR, lms_sha256_m32_h10, lms_params, lms_name, entropySource
 from utils import sha256_hash, u32str, hex_u32_to_int
 from lms_sig_funcs import serialize_lms_sig
 from lms_pubkey import LmsPublicKey
@@ -31,35 +30,7 @@ class LmsPrivateKey(object):
         self.nodes = {}
         self.lms_pub_value = self.T(1)
 
-    def generate_key_pair(self, lms_type=lms_sha256_m32_h10, lmots_type=LMOTS_SHA256_N32_W8, seed=None, var_I=None):
 
-        n, p, w, ls = lmots_params[lmots_type]
-        m, h, len_I = lms_params[lms_type]
-
-        if seed is not None and len(seed) != n:
-            raise ValueError(err_bad_length, str(len(seed)))
-        if var_I is not None and len(var_I) != len_I:
-            raise ValueError(err_bad_length, str(len(var_I)))
-
-        if seed is None:
-            seed = entropySource.read(n)
-        if var_I is None:
-            var_I = entropySource.read(len_I)
-
-        priv = list()
-        pub = list()
-
-        # Q: instance number
-        # w: Winternitz parameter
-        # I: identity
-        for Q in xrange(0, 2 ** h):
-            s = var_I + u32str(Q)
-            ots_priv = LmotsPrivateKey(s=s, seed=seed, lmots_type=lmots_type)
-            ots_pub = ots_priv.generate_public_key()
-            priv.append(ots_priv)
-            pub.append(ots_pub)
-
-        return pub, priv
 
     def get_path(self, node_num):
         path = list()
@@ -119,16 +90,14 @@ class LmsPrivateKey(object):
     def get_public_key(self):
         return LmsPublicKey(self.I, self.lms_pub_value, self.lms_type, self.lmots_type)
 
-    @classmethod
-    def get_param_list(cls):
+    def get_param_list(self):
         param_list = list()
         for x in lmots_params.keys():
             for y in lms_params.keys():
                 param_list.append({'lmots_type': x, 'lms_type': y})
         return param_list
 
-    @classmethod
-    def get_public_key_class(cls):
+    def get_public_key_class(self):
         return LmsPublicKey
 
     def serialize(self):
@@ -145,8 +114,7 @@ class LmsPrivateKey(object):
         q = hex_u32_to_int(hex_value[8 + n + LenI:8 + n + LenI + 4])
         return cls(lms_type, lmots_type, seed, I, q)
 
-    @classmethod
-    def deserialize_print_hex(cls, hex_value):
+    def deserialize_print_hex(self, hex_value):
         PrintUtl.print_line()
         print "LMS private key"
         lms_type = hex_u32_to_int(hex_value[0:4])
@@ -163,8 +131,7 @@ class LmsPrivateKey(object):
         PrintUtl.print_hex("leaf_num", u32str(q))
         PrintUtl.print_line()
 
-    @classmethod
-    def parse(cls, hex_value):
+    def parse(self, hex_value):
         lms_type = hex_u32_to_int(hex_value[0:4])
         lmots_type = hex_u32_to_int(hex_value[4:8])
         n, p, w, ls = lmots_params[lmots_type]
