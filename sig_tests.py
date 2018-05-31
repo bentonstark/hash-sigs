@@ -4,7 +4,7 @@ from need_to_sort import err_private_key_exhausted, err_bad_length, err_bad_valu
     lmots_params
 from merkle import Merkle
 from utils import u32str, hex_u32_to_int, string_to_hex
-from lms_sig_funcs import parse_lms_sig, print_lms_sig
+from lms_sig import parse_lms_sig, print_lms_sig
 from lmots_sig import LmotsSignature
 from lms_pubkey import LmsPublicKey
 from sig_test_mangler import Mangler

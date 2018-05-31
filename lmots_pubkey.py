@@ -1,4 +1,3 @@
-
 from lmots import LmotsType
 from utils import u32str, hex_u32_to_int
 from print_util import PrintUtl
@@ -23,9 +22,9 @@ class LmotsPublicKey:
 
         if len(hex_value) != 4 + 2 * lmots_type.n:
             raise ValueError("hex_value is wrong length")
-        S = hex_value[4:4 + lmots_type.n]
-        K = hex_value[4 + lmots_type.n:4 + 2 * lmots_type.n]
-        return cls(S, K, lmots_type)
+        s = hex_value[4:4 + lmots_type.n]
+        k = hex_value[4 + lmots_type.n:4 + 2 * lmots_type.n]
+        return cls(s, k, lmots_type)
 
     def print_hex(self):
         PrintUtl.print_line()
@@ -34,6 +33,3 @@ class LmotsPublicKey:
         PrintUtl.print_hex("S", self.s)
         PrintUtl.print_hex("K", self.k)
         PrintUtl.print_line()
-
-
-

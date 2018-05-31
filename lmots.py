@@ -6,7 +6,7 @@ from lmots_pubkey import LmotsPublicKey
 from lmots_pvtkey import LmotsPrivateKey
 from merkle import Merkle
 from lmots_sig import LmotsSignature
-from lmots_alg import LmotsAlg
+from lmots_params import LmotsParams
 from enum import Enum
 
 
@@ -14,10 +14,10 @@ class LmotsType(Enum):
     """
     Leighton-Micali One Time Signature (LMOTS) Algorithm Type Enumeration
     """
-    LMOTS_SHA256_M32_W1 = LmotsAlg(name="LMOTS_SHA256_M32_W1", n=32, p=265, w=1, ls=7, type_code=0x00000001)
-    LMOTS_SHA256_M32_W2 = LmotsAlg(name="LMOTS_SHA256_M32_W2", n=32, p=133, w=2, ls=6, type_code=0x00000002)
-    LMOTS_SHA256_M32_W4 = LmotsAlg(name="LMOTS_SHA256_M32_W4", n=32, p=67, w=4, ls=4, type_code=0x00000003)
-    LMOTS_SHA256_M32_W8 = LmotsAlg(name="LMOTS_SHA256_M32_W8", n=32, p=34, w=8, ls=0, type_code=0x00000004)
+    LMOTS_SHA256_M32_W1 = LmotsParams(name="LMOTS_SHA256_M32_W1", n=32, p=265, w=1, ls=7, type_code=0x00000001)
+    LMOTS_SHA256_M32_W2 = LmotsParams(name="LMOTS_SHA256_M32_W2", n=32, p=133, w=2, ls=6, type_code=0x00000002)
+    LMOTS_SHA256_M32_W4 = LmotsParams(name="LMOTS_SHA256_M32_W4", n=32, p=67, w=4, ls=4, type_code=0x00000003)
+    LMOTS_SHA256_M32_W8 = LmotsParams(name="LMOTS_SHA256_M32_W8", n=32, p=34, w=8, ls=0, type_code=0x00000004)
 
     @staticmethod
     def get_by_type_code(type_code):
@@ -151,13 +151,13 @@ class Lmots:
         signature = LmotsSignature.deserialize(signature)
         if signature.type != self.lmots_type.type_code:
             raise ValueError("signature type code does not match expected value")
-        hashQ = sha256_hash(s + signature.C + message + D_MESG)
-        V = hashQ + Merkle.checksum(hashQ, self.lmots_type.w, self.lmots_type.ls)
+        hash_q = sha256_hash(s + signature.C + message + D_MESG)
+        v = hash_q + Merkle.checksum(hash_q, self.lmots_type.w, self.lmots_type.ls)
         outer_hash = SHA256.new()
         outer_hash.update(s)
         for i, y in enumerate(signature.y):
             tmp = y
-            for j in xrange(Merkle.coef(V, i, self.lmots_type.w), 2 ** self.lmots_type.w - 1):
+            for j in xrange(Merkle.coef(v, i, self.lmots_type.w), 2 ** self.lmots_type.w - 1):
                 tmp = sha256_hash(s + tmp + u16str(i) + u8str(j) + D_ITER)
             outer_hash.update(tmp)
         outer_hash.update(D_PBLC)

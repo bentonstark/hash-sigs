@@ -1,9 +1,6 @@
 
-from need_to_sort import err_private_key_exhausted, D_ITER, D_PBLC, D_MESG, D_PRG, entropySource
-from merkle import Merkle
-from utils import sha256_hash, u32str, u16str, u8str
+from utils import u32str
 from lmots_pubkey import LmotsPublicKey
-from lmots_sig import LmotsSignature
 from print_util import PrintUtl
 
 
@@ -12,7 +9,7 @@ class LmotsPrivateKey:
     Leighton-Micali One Time Signature Private Key
     """
     def __init__(self, lmots_type, raw_key, s, seed, signatures_remaining):
-        self.type = lmots_type
+        self.lmots_type = lmots_type
         self.raw_key = raw_key
         self.s = s
         self.seed = seed
@@ -21,19 +18,19 @@ class LmotsPrivateKey:
     def print_hex(self):
         PrintUtl.print_line()
         print "LMOTS private key"
-        PrintUtl.print_hex("LMOTS type", u32str(self.type), lmots_name[self.type])
-        PrintUtl.print_hex("S", self.S)
-        for i, x in enumerate(self.x):
+        PrintUtl.print_hex("LMOTS type", u32str(self.lmots_type.type_code), self.lmots_type.name)
+        PrintUtl.print_hex("S", self.s)
+        for i, x in enumerate(self.raw_key):
             PrintUtl.print_hex("x[" + str(i) + "]", x)
         PrintUtl.print_line()
 
-    @classmethod
-    def get_param_list(cls):
+    def get_param_list(self):
+        # dumps the possible LMOTS types for informational purposes
         param_list = list()
         for t in lmots_params.keys():
-            param_list.append({'lmots_type':t})
+            param_list.append({'lmots_type': t})
         return param_list
 
-    @classmethod
-    def get_public_key_class(cls):
+    def get_public_key_class(self):
         return LmotsPublicKey
+

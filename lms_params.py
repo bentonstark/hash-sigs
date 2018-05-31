@@ -1,5 +1,5 @@
 
-class LmsAlg:
+class LmsParams:
 
     def __init__(self, name, m, h, len_i, type_code):
         self.name = name

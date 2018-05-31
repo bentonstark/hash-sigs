@@ -1,5 +1,5 @@
 
-class LmotsAlg:
+class LmotsParams:
 
     def __init__(self, name, n, p, w, ls, type_code):
         self.name = name
