@@ -2,8 +2,8 @@ from need_to_sort import err_bad_value
 from utils import u32str, hex_u32_to_int, serialize_array
 from lmots_sig import LmotsSignature
 from print_util import PrintUtl
-from lms import LmsType
-from lmots import LmotsType
+from lms_type import LmsType
+from lmots_type import LmotsType
 
 
 class LmsSignature:

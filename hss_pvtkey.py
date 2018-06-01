@@ -1,16 +1,19 @@
-from need_to_sort import err_private_key_exhausted, LMS_SHA256_M32_H05
+from need_to_sort import err_private_key_exhausted
 from utils import u32str, hex_u32_to_int
 from sig_tests import serialize_hss_sig
 from hss_pubkey import HssPublicKey
 from lms_pvtkey import LmsPrivateKey
 from print_util import PrintUtl
+from lms_type import LmsType
+from lmots_type import LmotsType
 
 
 class HssPrivateKey(object):
     """
     Hierarchical Signature System Private Key
     """
-    def __init__(self, levels=2, lms_type=LMS_SHA256_M32_H05, lmots_type=LMOTS_SHA256_N32_W8, prv0=None):
+    def __init__(self, levels=2, lms_type=LmsType.LMS_SHA256_M32_H5, lmots_type=LmotsType.LMOTS_SHA256_M32_W8,
+                 prv0=None):
         self.levels = levels
         self.prv = list()
         self.pub = list()

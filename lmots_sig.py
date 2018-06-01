@@ -1,14 +1,16 @@
-
 from utils import u32str, hex_u32_to_int, serialize_array
 from print_util import PrintUtl
-from lmots import LmotsType
+from lmots_type import LmotsType
 
 
 class LmotsSignature:
     """
     Leighton-Micali One Time Signature
     """
-    def __init__(self, c, y, lmots_type=LmotsType.LMOTS_SHA256_N32_W8):
+    def __init__(self, c, y, lmots_type=LmotsType.LMOTS_SHA256_M32_W8):
+        if not isinstance(lmots_type, LmotsType):
+            raise ValueError("lmots_type must be of type LmotsType")
+
         self.c = c
         self.y = y
         self.lmots_type = lmots_type

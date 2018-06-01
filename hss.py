@@ -44,9 +44,9 @@ import sys
 import os.path
 from hss_pubkey import HssPublicKey
 from hss_pvtkey import HssPrivateKey
-from lmots_pvtkey import LmotsPrivateKey
+from lmots import Lmots
 from lms_pvtkey import LmsPrivateKey
-from need_to_sort import VALID, retcode_get_string
+from need_to_sort import retcode_get_string
 from print_util import PrintUtl
 from sig_tests import print_hss_sig, checksum_test, ntimesig_test
 from utils import sha256_hash
@@ -148,7 +148,7 @@ if __name__ == "__main__":
         if test_checksum:
             checksum_test()
         if test_lmots:
-            ntimesig_test(LmotsPrivateKey, verbose=False)
+            ntimesig_test(Lmots, verbose=False)
         if test_lms:
             ntimesig_test(LmsPrivateKey, verbose=True)
         if test_hss:
@@ -225,7 +225,7 @@ if __name__ == "__main__":
             msg_file = open(msg_name, 'r')
             msg = msg_file.read()
             result = pub.verify(msg, sig)
-            if result == VALID:
+            if result:
                 print "VALID"
             else:
                 print "INVALID (" + retcode_get_string(result) + ")"

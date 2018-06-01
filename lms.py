@@ -1,36 +1,10 @@
-from enum import Enum
 from Crypto import Random
-from lms_params import LmsParams
 from lms_sig import LmsSignature
-from lmots import LmotsType, Lmots
+from lmots import Lmots
+from lmots_type import LmotsType
+from lms_type import LmsType
 from utils import sha256_hash, u32str, hex_u32_to_int
 from need_to_sort import D_INTR, D_LEAF
-
-
-class LmsType(Enum):
-    """
-    Leighton-Micali Signature (LMS) Algorithm Type Enumeration
-    """
-    LMOTS_SHA256_M32_H5 = LmsParams(name="LMS_SHA256_M32_H5", m=32, h=5, len_i=64, type_code=0x00000005)
-    LMOTS_SHA256_M32_H10 = LmsParams(name="LMS_SHA256_M32_H10", m=32, h=10, len_i=64, type_code=0x00000006)
-    LMOTS_SHA256_M32_H15 = LmsParams(name="LMS_SHA256_M32_H15", m=32, h=15, len_i=64, type_code=0x00000007)
-    LMOTS_SHA256_M32_H20 = LmsParams(name="LMS_SHA256_M32_H20", m=32, h=20, len_i=64, type_code=0x00000008)
-    LMOTS_SHA256_M32_H25 = LmsParams(name="LMS_SHA256_M32_H25", m=32, h=25, len_i=64, type_code=0x00000009)
-
-    @staticmethod
-    def get_by_type_code(type_code):
-        if type_code == LmsType.LMOTS_SHA256_M32_H5.type_code:
-            return LmsType.LMOTS_SHA256_M32_H5
-        elif type_code == LmsType.LMOTS_SHA256_M32_H10.type_code:
-            return LmsType.LMOTS_SHA256_M32_H10
-        elif type_code == LmsType.LMOTS_SHA256_M32_H15.type_code:
-            return LmsType.LMOTS_SHA256_M32_H15
-        elif type_code == LmsType.LMOTS_SHA256_M32_H20.type_code:
-            return LmsType.LMOTS_SHA256_M32_H20
-        elif type_code == LmsType.LMOTS_SHA256_M32_H25.type_code:
-            return LmsType.LMOTS_SHA256_M32_H25
-        else:
-            raise ValueError("unknown LMS type code", str(type_code))
 
 
 class Lms:
@@ -38,7 +12,7 @@ class Lms:
     Leighton-Micali Signature (LMS) Algorithm
     """
 
-    def __init__(self, lms_type=LmsType.LMOTS_SHA256_M32_H10, lmots_type=LmotsType.LMOTS_SHA256_N32_W8,
+    def __init__(self, lms_type=LmsType.LMS_SHA256_M32_H10, lmots_type=LmotsType.LMOTS_SHA256_M32_W8,
                  entropy_source=None):
         self.lms_type = lms_type
         self.lmots_type = lmots_type
@@ -88,7 +62,7 @@ class Lms:
         pvt_key.leaf_num = pvt_key.leaf_num + 1
         return LmsSignature.serialize(self.lms_type, leaf_num, ots_sig, path)
 
-    def verify(self, message, sig, i, public_key_value):
+    def verify(self, message, sig, i, k):
         lms_type, q, lmots_sig, path = LmsSignature.deserialize_lms_sig(sig)
 
         node_num = q + 2 ** self.lms_type.h
@@ -106,7 +80,7 @@ class Lms:
                 sig_pub_key = sha256_hash(i + sig_pub_key + path_value.next() + u32str(node_num / 2) + D_INTR)
             node_num = node_num / 2
 
-        is_valid = sig_pub_key == public_key_value
+        is_valid = sig_pub_key == k
         return is_valid
 
     #TODO: move to serialization class?
