@@ -157,7 +157,7 @@ def ntimesig_test_param(alg_class, param, verbose=False):
                 err_handle(err)
         else:
             if i > num_sigs:
-                print "failed: key overuse occured; created " + str(i) + "signatures"
+                print "failed: key overuse occurred; created " + str(i) + "signatures"
                 sys.exit()
 
     print "mangled signature parse test",
@@ -170,8 +170,8 @@ def ntimesig_test_param(alg_class, param, verbose=False):
                 public_key.deserialize(mangled_sig).print_hex()
                 sys.exit(1)
         except ValueError as err:
-            if err.args[0] not in err_list:
-                raise
+            if err[0] != "unknown LMOTS type code" and err[0] != "hex_value is wrong length":
+                raise err
             else:
                 err_dict[err.args[0]] = err_dict.get(err.args[0], 0) + 1
     print "error counts:"
@@ -185,13 +185,13 @@ def ntimesig_test_param(alg_class, param, verbose=False):
     for mangled_pub in mangled_pub_iterator:
         try:
             public_key = public_key.deserialize(mangled_pub)
-            if public_key.verify(test_message, mangled_sig):
+            if alg.verify(test_message, mangled_sig, public_key):
                 print "failed: invalid signature accepted (mangled byte: " + str(mangled_sig_iterator.i) + ")"
                 LmotsSignature.deserialize(mangled_sig).print_hex()
                 sys.exit(1)
         except ValueError as err:
-            if err.args[0] not in err_list:
-                raise
+            if err[0] != "unknown LMOTS type code" and err[0] != "hex_value is wrong length":
+                raise err
             else:
                 err_dict[err.args[0]] = err_dict.get(err.args[0], 0) + 1
     print "error counts:"
