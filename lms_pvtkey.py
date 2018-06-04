@@ -25,7 +25,7 @@ class LmsPrivateKey(object):
         self.seed = seed
 
         if i is None:
-            self.i = entropy_source.read(lms_type.len_i)
+            self.i = self._entropy_source.read(lms_type.len_i)
         else:
             self.i = i
         self.nodes = nodes
@@ -52,8 +52,8 @@ class LmsPrivateKey(object):
     # Algorithm for computing root and other nodes (alternative to Algorithm 6)
     #
     def T(self, r):
-        if r >= 2 ** self.lmots_type.h:
-            self.nodes[r] = sha256_hash(self.i + self.pub[r - 2 ** self.lmots_type.h].K + u32str(r) + D_LEAF)
+        if r >= 2 ** self.lms_type.h:
+            self.nodes[r] = sha256_hash(self.i + self.pub[r - 2 ** self.lms_type.h].K + u32str(r) + D_LEAF)
             return self.nodes[r]
         else:
             self.nodes[r] = sha256_hash(self.i + self.T(2 * r) + self.T(2 * r + 1) + u32str(r) + D_INTR)
