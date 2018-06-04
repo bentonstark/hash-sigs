@@ -176,7 +176,7 @@ def ntimesig_test_param(alg_class, param, verbose=False):
                 err_dict[err.args[0]] = err_dict.get(err.args[0], 0) + 1
     print "error counts:"
     for err_key in err_dict:
-        print "\t" + err_key.ljust(40)[7:] + str(err_dict[err_key])
+        print "\t" + err_key.ljust(40)[0:] + str(err_dict[err_key])
     print "passed"
 
     print "mangled public key parse test",
@@ -196,7 +196,7 @@ def ntimesig_test_param(alg_class, param, verbose=False):
                 err_dict[err.args[0]] = err_dict.get(err.args[0], 0) + 1
     print "error counts:"
     for err_key in err_dict:
-        print "\t" + err_key.ljust(40)[7:] + str(err_dict[err_key])
+        print "\t" + err_key.ljust(40)[0:] + str(err_dict[err_key])
     print "passed"
 
 
