@@ -45,7 +45,7 @@ import os.path
 from hss_pubkey import HssPublicKey
 from hss_pvtkey import HssPrivateKey
 from lmots import Lmots
-from lms_pvtkey import LmsPrivateKey
+from lms import Lms
 from need_to_sort import retcode_get_string
 from print_util import PrintUtl
 from sig_tests import print_hss_sig, checksum_test, ntimesig_test
@@ -148,9 +148,9 @@ if __name__ == "__main__":
         if test_checksum:
             checksum_test()
         if test_lmots:
-            ntimesig_test(Lmots, verbose=False)
+            ntimesig_test("lmots", verbose=False)
         if test_lms:
-            ntimesig_test(LmsPrivateKey, verbose=True)
+            ntimesig_test("lms", verbose=True)
         if test_hss:
             ntimesig_test(HssPrivateKey, verbose=True)
 

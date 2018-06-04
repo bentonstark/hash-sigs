@@ -153,16 +153,4 @@ class Lmots:
 
         return LmotsPublicKey(s=s, k=outer_hash.digest(), lmots_type=self.lmots_type)
 
-    # TODO: move this out as it is only used for testing
-    @staticmethod
-    def get_param_list():
-        # dumps the possible LMOTS types for informational purposes
-        param_list = list()
-        for t in LmotsType.get_param_list().keys():
-            param_list.append({'lmots_type': t})
-        return param_list
 
-    # TODO: move this out as it is only used for testing
-    @staticmethod
-    def get_public_key_class():
-        return LmotsPublicKey

@@ -15,7 +15,7 @@ class LmsPublicKey(object):
         self.lmots_type = lmots_type
 
     def serialize(self):
-        return u32str(self.lms_type) + u32str(self.lmots_type) + self.i + self.k
+        return u32str(self.lms_type.type_code) + u32str(self.lmots_type.type_code) + self.i + self.k
 
     @staticmethod
     def parse(hex_value):

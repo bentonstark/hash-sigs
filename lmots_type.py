@@ -38,10 +38,4 @@ class LmotsType(Enum):
         else:
             raise ValueError("unknown LMOTS type code", str(type_code))
 
-    @staticmethod
-    def get_param_list():
-        params = {}
-        for t in LmotsType:
-            params[t.name] = (t.n, t.p, t.w, t.ls)
-        return params
 

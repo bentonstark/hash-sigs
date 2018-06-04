@@ -8,8 +8,11 @@ from lmots_sig import LmotsSignature
 from lms_pubkey import LmsPublicKey
 from sig_test_mangler import Mangler
 from print_util import PrintUtl
-from lmots_type import LmotsType
+from lms import Lms
+from lms_type import LmsType
 from lmots import Lmots
+from lmots_type import LmotsType
+
 
 test_message = "Hello, world!"
 
@@ -81,27 +84,27 @@ def print_as_coefs(x, w, p):
     print "\n"
 
 
-def ntimesig_test(alg_class, verbose=False):
-    param_list = alg_class.get_param_list()
-    for param in param_list:
-        ntimesig_test_param(alg_class, param, verbose)
+def ntimesig_test(name, verbose=False):
+    if name == "lmots":
+        for lmots_type in LmotsType:
+            alg = Lmots(lmots_type)
+            ntimesig_test_param(alg, verbose)
+    elif name == "lms":
+        for lmots_type in LmotsType:
+            for lms_type in LmsType:
+                alg = Lms(lms_type, lmots_type)
+                ntimesig_test_param(alg, verbose)
+    else:
+        raise ValueError("unknown test name {}".format(name))
 
 
-def ntimesig_test_param(alg_class, param, verbose=False):
+def ntimesig_test_param(alg, verbose=False):
     """
     Unit test for N-time signatures
-
-    :param param: dictionary containing private key parameters
-    :param verbose: boolean that determines verbosity of output
-    :return:
     """
     print "N-time signature test"
-    # public_key_class = alg_class.private_key_class.get_public_key_class()
-    # private_key_class = alg_class.private_key_class.get_private_key_class()
-    # private_key = private_key_class(**param)
 
-    #alg = alg_class(**param)
-    alg = Lmots()
+    # generate key pairs
     public_key, private_key = alg.generate_key_pair()
 
     public_key_buffer = public_key.serialize()
