@@ -5,6 +5,8 @@ from lmots_type import LmotsType
 from lms_type import LmsType
 from utils import sha256_hash, u32str, hex_u32_to_int
 from need_to_sort import D_INTR, D_LEAF
+from lms_pvtkey import LmsPrivateKey
+from lms_pubkey import LmsPublicKey
 
 
 class Lms:
@@ -21,22 +23,23 @@ class Lms:
         else:
             self._entropy_source = entropy_source
 
-    def generate_key_pair(self, seed=None, var_i=None):
+    def generate_key_pair(self, seed=None, i=None, q=0):
         """
         Generate a LMS key pair.
         :param seed: seed value; if None then random bytes read from entropy source
-        :param var_i: var_i value; if None then random bytes read from entropy source
+        :param i: i value; if None then random bytes read from entropy source
+        :param q: q value; if None then 0
         :return: list of LMOTS public keys and list of LMOTS private keys
         """
         if seed is not None and len(seed) != self.lmots_type.n:
             raise ValueError("seed length invalid", str(len(seed)))
-        if var_i is not None and len(var_i) != self.lms_type.len_i:
-            raise ValueError("var_id length invalid", str(len(var_i)))
+        if i is not None and len(i) != self.lms_type.len_i:
+            raise ValueError("var_id length invalid", str(len(i)))
 
         if seed is None:
             seed = self._entropy_source.read(self.lmots_type.n)
-        if var_i is None:
-            var_i = self._entropy_source.read(self.lms_type.len_i)
+        if i is None:
+            i = self._entropy_source.read(self.lms_type.len_i)
 
         priv = list()
         pub = list()
@@ -46,15 +49,35 @@ class Lms:
         # I: identity
         lmots = Lmots(lmots_type=self.lmots_type)
         for q in xrange(0, 2 ** self.lms_type.h):
-            s = var_i + u32str(q)
+            s = i + u32str(q)
             ots_pub, ots_priv = lmots.generate_key_pair(s=s, seed=seed)
             priv.append(ots_priv)
             pub.append(ots_pub)
 
-        return pub, priv
+        # init the lms private key object
+        lms_pvt_key = LmsPrivateKey(lms_type=self.lms_type, lmots_type=self.lmots_type, private_keys=priv,
+                                    seed=seed, i=i, q_init=q)
+
+        pub_lmots_nodes = {}
+        lms_pub_value = self._T(1, pub_lmots_nodes, pub, i)
+        lms_pub_key = LmsPublicKey(lms_type=self.lms_type, lmots_type=self.lmots_type, i=i, k=lms_pub_value,
+                                   nodes=pub_lmots_nodes)
+
+        return lms_pub_key, lms_pvt_key
+
+    # Algorithm for computing root and other nodes (alternative to Algorithm 6)
+    #
+    def _T(self, r, pub_nodes, pub_lmots_keys, i):
+        if r >= 2 ** self.lms_type.h:
+            pub_nodes[r] = sha256_hash(i + pub_lmots_keys[r - 2 ** self.lms_type.h].k + u32str(r) + D_LEAF)
+            return pub_nodes[r]
+        else:
+            pub_nodes[r] = sha256_hash(i + self._T(2 * r, pub_nodes, pub_lmots_keys, i)
+                                       + self._T(2 * r + 1, pub_nodes, pub_lmots_keys, i) + u32str(r) + D_INTR)
+            return pub_nodes[r]
 
     def sign(self, message, pvt_key):
-        if pvt_key.leaf_num >= 2 ** self.lmots_type.h:
+        if pvt_key.leaf_num >= 2 ** self.lms_type.h:
             raise ValueError("attempted overuse of private key")
         ots_sig = pvt_key.get_next_ots_priv_key().sign(message)
         path = pvt_key.get_path(pvt_key.leaf_num + 2 ** self.lmots_type.h)

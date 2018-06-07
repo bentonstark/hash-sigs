@@ -6,27 +6,32 @@ from lms_pvtkey import LmsPrivateKey
 from print_util import PrintUtl
 from lms_type import LmsType
 from lmots_type import LmotsType
-
+from lms import Lms
 
 class HssPrivateKey(object):
     """
     Hierarchical Signature System Private Key
     """
-    def __init__(self, levels=2, lms_type=LmsType.LMS_SHA256_M32_H5, lmots_type=LmotsType.LMOTS_SHA256_M32_W8,
-                 prv0=None):
+    def __init__(self, levels=2, lms_type=LmsType.LMS_SHA256_M32_H5, lmots_type=LmotsType.LMOTS_SHA256_M32_W8):
         self.levels = levels
         self.prv = list()
         self.pub = list()
         self.sig = list()
 
-        if prv0 is None:
-            prv0 = LmsPrivateKey(lms_type=lms_type, lmots_type=lmots_type)
-        self.prv.append(prv0)
-        self.pub.append(self.prv[0].get_public_key())
+        lms = Lms(lms_type=lms_type, lmots_type=lmots_type)
+
+        # TODO: this pub and prv lists needs to be LmsPublic and LmsPrivate key objects instead
+        pub_0, prv_0 = lms.generate_key_pair()
+        self.pub.append(pub_0)
+        self.prv.append(prv_0)
+
         for i in xrange(1, self.levels):
-            self.prv.append(LmsPrivateKey(lms_type=lms_type, lmots_type=lmots_type))
-            self.pub.append(self.prv[-1].get_public_key())
-            self.sig.append(self.prv[-2].sign(self.pub[-1].serialize()))
+            pub_key, pvt_key = lms.generate_key_pair()
+            self.prv.append(pvt_key)
+            self.pub.append(pub_key)
+            pub_key_ser = pub_key.serialize()
+            sig = lms.sign(pub_key_ser, self.prv[i-1])
+            self.sig.append(sig)
 
     def sign(self, message):
         while self.prv[-1].is_exhausted():
