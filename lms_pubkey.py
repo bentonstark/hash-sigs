@@ -25,26 +25,6 @@ class LmsPublicKey(object):
             node_num = node_num / 2
         return path
 
-    def serialize(self):
-        return u32str(self.lms_type.type_code) + u32str(self.lmots_type.type_code) + self.i + self.k
-
-    @staticmethod
-    def parse(hex_value):
-        #lms_type = Lms.get_lms_type(hex_value)
-        #return hex_value[0:4 + 4 + lms_type.len_i + lms_type.m], hex_value[4 + 4 + lms_type.len_i + lms_type.m:]
-        return None
-
-    @classmethod
-    def deserialize(cls, hex_value):
-        #lms_type = Lms.get_lms_type(hex_value)
-        #lmots_type = Lms.get_lms_type(hex_value)
-
-        #i = hex_value[8:8 + lms_type.len_i]
-        #k = hex_value[8 + lms_type.len_i:8 + lms_type.len_i + lms_type.m]
-        #
-        #return cls(lms_type, lmots_type, i, k, None)
-        return None
-
     def print_hex(self):
         PrintUtl.print_line()
         print "LMS public key"

@@ -1,8 +1,6 @@
-from Crypto import Random
-from need_to_sort import D_LEAF, D_INTR
-from utils import sha256_hash, u32str, hex_u32_to_int
+from utils import u32str
 from print_util import PrintUtl
-#from lms import Lms
+from lms_serializer import LmsSerializer
 
 
 class LmsPrivateKey(object):
@@ -48,45 +46,6 @@ class LmsPrivateKey(object):
         #return param_list
         return None
 
-    def serialize(self):
-        return u32str(self.lms_type) + u32str(self.lmots_type) + self.seed + self.i + u32str(self.leaf_num)
-
-    @classmethod
-    def deserialize(cls, hex_value):
-        lms_type = Lms.get_lms_type(hex_value)
-        lmots_type = Lms.get_lmots_type(hex_value)
-        seed = hex_value[8:8 + lmots_type.n]
-        i = hex_value[8 + lmots_type.n:8 + lmots_type.n + lms_type.len_i]
-        q = hex_u32_to_int(hex_value[8 + lmots_type.n + lms_type.len_i:8 + lmots_type.n + lms_type.len_i + 4])
-
-        #pub_key, pvt_key = Lms(lms_type, lmots_type).generate_key_pair(seed=seed, i=i, q=q)
-
-        #return pvt_key
-
-    @staticmethod
-    def deserialize_print_hex(hex_value):
-
-        lms_type = Lms.get_lms_type(hex_value)
-        lmots_type = Lms.get_lmots_type(hex_value)
-
-        PrintUtl.print_line()
-        print "LMS private key"
-
-        seed = hex_value[8:8 + lmots_type.n]
-        i = hex_value[8 + lmots_type.n:8 + lmots_type.n + lms_type.len_i]
-        q = hex_u32_to_int(hex_value[8 + lmots_type.n + lms_type.len_i:8 + lmots_type.n + lms_type.len_i + 4])
-        PrintUtl.print_hex("lms_type", u32str(lms_type))
-        PrintUtl.print_hex("lmots_type", u32str(lmots_type))
-        PrintUtl.print_hex("seed", seed)
-        PrintUtl.print_hex("I", i)
-        PrintUtl.print_hex("leaf_num", u32str(q))
-        PrintUtl.print_line()
-
-    @staticmethod
-    def parse(hex_value):
-        lms_type = Lms.get_lms_type(hex_value)
-        lmots_type = Lms.get_lmots_type(hex_value)
-        return hex_value[:8 + lmots_type.n + lms_type.len_i], hex_value[8 + lmots_type.n + lms_type.len_i:]
 
 
 

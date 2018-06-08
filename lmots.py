@@ -8,6 +8,7 @@ from lmots_pubkey import LmotsPublicKey
 from lmots_pvtkey import LmotsPrivateKey
 from merkle import Merkle
 from lmots_sig import LmotsSignature
+from lmots_serializer import LmotsSerializer
 
 
 class Lmots:
@@ -111,7 +112,8 @@ class Lmots:
                 tmp = sha256_hash(pvt_key.s + tmp + u16str(i) + u8str(j) + D_ITER)
             raw_sig.append(tmp)
             pvt_key.signatures_remaining = 0
-        return LmotsSignature(c, raw_sig, pvt_key.lmots_type).serialize()
+        lmots_sig = LmotsSignature(c, raw_sig, pvt_key.lmots_type)
+        return LmotsSerializer.serialize_signature(lmots_sig)
 
     def verify(self, message, signature, pub_key):
         """
@@ -137,14 +139,14 @@ class Lmots:
         :param message: original message
         :return: LMOTS public key object
         """
-        signature = LmotsSignature.deserialize(signature)
-        if signature.lmots_type != self.lmots_type:
+        lmots_sig = LmotsSerializer.deserialize_signature(signature)
+        if lmots_sig.lmots_type != self.lmots_type:
             raise ValueError("signature type code does not match expected value")
-        hash_q = sha256_hash(s + signature.c + message + D_MESG)
+        hash_q = sha256_hash(s + lmots_sig.c + message + D_MESG)
         v = hash_q + Merkle.checksum(hash_q, self.lmots_type.w, self.lmots_type.ls)
         outer_hash = SHA256.new()
         outer_hash.update(s)
-        for i, y in enumerate(signature.y):
+        for i, y in enumerate(lmots_sig.y):
             tmp = y
             for j in xrange(Merkle.coef(v, i, self.lmots_type.w), 2 ** self.lmots_type.w - 1):
                 tmp = sha256_hash(s + tmp + u16str(i) + u8str(j) + D_ITER)

@@ -7,6 +7,7 @@ from utils import sha256_hash, u32str, hex_u32_to_int
 from need_to_sort import D_INTR, D_LEAF
 from lms_pvtkey import LmsPrivateKey
 from lms_pubkey import LmsPublicKey
+from lms_serializer import LmsSerializer
 
 
 class Lms:
@@ -76,14 +77,17 @@ class Lms:
                                        + self._T(2 * r + 1, pub_nodes, pub_lmots_keys, i) + u32str(r) + D_INTR)
             return pub_nodes[r]
 
-    def sign(self, message, pvt_key):
+    def sign(self, message, pub_key, pvt_key):
         if pvt_key.leaf_num >= 2 ** self.lms_type.h:
             raise ValueError("attempted overuse of private key")
-        ots_sig = pvt_key.get_next_ots_priv_key().sign(message)
-        path = pvt_key.get_path(pvt_key.leaf_num + 2 ** self.lmots_type.h)
+        lmots = Lmots(self.lmots_type)
+        ots_sig = lmots.sign(message, pvt_key.get_next_ots_priv_key())
+        path = pub_key.get_path(pvt_key.leaf_num + 2 ** self.lms_type.h)
+        # path = pvt_key.get_path(pvt_key.leaf_num + 2 ** self.lms_type.h)
         leaf_num = pvt_key.leaf_num
         pvt_key.leaf_num = pvt_key.leaf_num + 1
-        return LmsSignature.serialize(self.lms_type, leaf_num, ots_sig, path)
+        lms_sig = LmsSignature(self.lms_type, leaf_num, ots_sig, path)
+        LmsSerializer.serialize_signature(lms_sig)
 
     def verify(self, message, sig, i, k):
         lms_type, q, lmots_sig, path = LmsSignature.deserialize_lms_sig(sig)
@@ -94,7 +98,7 @@ class Lms:
         path_value = iter(path)
 
         lmots = Lmots(self.lmots_type)
-        sig_pub_key = lmots.extract_public_key(signature=lmots_sig, s=i + u32str(q), message=message)
+        sig_pub_key = lmots.extract_public_key(lmots_sig=lmots_sig, s=i + u32str(q), message=message)
         sig_pub_key = sha256_hash(i + sig_pub_key + u32str(node_num) + D_LEAF)
         while node_num > 1:
             if node_num % 2:
@@ -106,18 +110,3 @@ class Lms:
         is_valid = sig_pub_key == k
         return is_valid
 
-    #TODO: move to serialization class?
-    @staticmethod
-    def get_lms_type(hex_value):
-        # extract the type code value that identifies the LMS algorithm
-        sig_type_code_lms = hex_u32_to_int(hex_value[0:4])
-        lms_type = LmsType.get_by_type_code(sig_type_code_lms)
-        return lms_type
-
-    # TODO: move to serialization class?
-    @staticmethod
-    def get_lmots_type(hex_value):
-        # extract the type code value that identifies the LMOTS algorithm
-        sig_type_code_lmots = hex_u32_to_int(hex_value[4:8])
-        lmots_type = LmotsType.get_by_type_code(sig_type_code_lmots)
-        return lmots_type

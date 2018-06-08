@@ -44,12 +44,11 @@ import sys
 import os.path
 from hss_pubkey import HssPublicKey
 from hss_pvtkey import HssPrivateKey
-from lmots import Lmots
-from lms import Lms
 from need_to_sort import retcode_get_string
 from print_util import PrintUtl
 from sig_tests import print_hss_sig, checksum_test, ntimesig_test
 from utils import sha256_hash
+from hss import Hss
 
 
 # ***************************************************************
@@ -82,7 +81,7 @@ def verify_check_string(path, buffer):
     for path; if so, strip those bytes away and return the result.
     Otherwise, print and error and exit, to ensure that any private
     key file that makes use of this function will be protected against
-    accidential overuse.
+    accidental overuse.
     """
     if buffer[0:32] != calc_check_string(path):
         print "error: file \"" + path + "\" has been copied or modified"
@@ -158,8 +157,8 @@ if __name__ == "__main__":
         if len(sys.argv) >= 3:
             for key_name in sys.argv[2:]:
                 print "generating key " + key_name
-                hss_prv = HssPrivateKey()
-                hss_pub = hss_prv.get_public_key()
+                hss = Hss()
+                hss_pub, hss_prv = hss.generate_key_pair()
                 prv_file = open(key_name + ".prv", 'w')
                 prv_file.write(calc_check_string(key_name + ".prv") + hss_prv.serialize())
                 pub_file = open(key_name + ".pub", 'w')

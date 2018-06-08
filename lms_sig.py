@@ -1,41 +1,16 @@
-from need_to_sort import err_bad_value
-from utils import u32str, hex_u32_to_int, serialize_array
+from utils import u32str
 from lmots_sig import LmotsSignature
 from print_util import PrintUtl
-from lms_type import LmsType
-from lmots_type import LmotsType
 
 
 class LmsSignature:
 
-    @staticmethod
-    def serialize(type_code, q, signature, path):
-        return u32str(q) + signature + u32str(type_code) + serialize_array(path)
+    def __init__(self, type_code, q, signature, path):
 
-    @staticmethod
-    def deserialize_lms_sig(hex_value):
-        q = hex_u32_to_int(hex_value[0:4])
-        lmots_type = LmotsType.get_by_type_code(hex_u32_to_int(hex_value[4:8]))
-        pos = 4 + LmotsSignature.bytes(lmots_type.type_code)
-        lmots_sig = hex_value[4:pos]
-        lms_type = LmsType.get_by_type_code(hex_u32_to_int(hex_value[pos:pos + 4]))
-
-        if q >= 2 ** lms_type.h:
-            raise ValueError(err_bad_value)
-        pos = pos + 4
-        path = list()
-        for i in xrange(0, lms_type.h):
-            path.append(hex_value[pos:pos + lms_type.m])
-            pos = pos + lms_type.m
-        return lms_type, q, lmots_sig, path
-
-    @staticmethod
-    def parse_lms_sig(hex_value):
-        lmots_type = LmotsType.get_by_type_code(hex_u32_to_int(hex_value[4:8]))
-        pos = 4 + LmotsSignature.bytes(lmots_type.type_code)
-        lms_type = hex_u32_to_int(hex_value[pos:pos + 4])
-        pos = pos + 4 + lms_type.h * lms_type.m
-        return hex_value[0:pos], hex_value[pos:]
+        self.type_code = type_code
+        self.q = q
+        self.signature = signature
+        self.path = path
 
     @staticmethod
     def print_lms_sig(signature):

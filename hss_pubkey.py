@@ -3,6 +3,7 @@ from utils import u32str, hex_u32_to_int
 from sig_tests import deserialize_hss_sig
 from lms_pubkey import LmsPublicKey
 from print_util import PrintUtl
+from lms import LmsSerializer
 
 
 class HssPublicKey(object):
@@ -35,11 +36,12 @@ class HssPublicKey(object):
                 return INVALID_WITH_REASON
 
     def serialize(self):
-        return u32str(self.levels) + self.pub1.serialize()
+        return u32str(self.levels) + LmsSerializer.serialize_public_key(self.pub1)
 
     @classmethod
     def deserialize(cls, hex_value):
         levels = hex_u32_to_int(hex_value[0:4])
+        root_pub = LmsSerializer.deserialize_private_key(hex_value[4:])
         root_pub = LmsPublicKey.deserialize(hex_value[4:])
         return cls(root_pub, levels)
 
