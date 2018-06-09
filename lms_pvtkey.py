@@ -19,13 +19,13 @@ class LmsPrivateKey(object):
         return self.priv[self.leaf_num]
 
     def num_signatures_remaining(self):
-        return 2 ** self.lmots_type.h - self.leaf_num
+        return 2 ** self.lms_type.h - self.leaf_num
 
     def is_exhausted(self):
         return 0 == self.num_signatures_remaining()
 
     def max_signatures(self):
-        return 2 ** self.lmots_type.h
+        return 2 ** self.lms_type.h
 
     def print_hex(self):
         PrintUtl.print_line()

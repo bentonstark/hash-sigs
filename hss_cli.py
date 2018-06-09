@@ -49,7 +49,7 @@ from print_util import PrintUtl
 from sig_tests import print_hss_sig, checksum_test, ntimesig_test
 from utils import sha256_hash
 from hss import Hss
-
+from hss_serializer import HssSerializer
 
 # ***************************************************************
 #                                                               |
@@ -183,17 +183,25 @@ if __name__ == "__main__":
         if len(msg_name_list) is 0:
             print "error: no messages given on command line"
             usage(sys.argv[0])
+        # read in the private key
         prv_file = open(key_name, "r+")
         prv_buf = prv_file.read()
-        hss_prv = HssPrivateKey.deserialize(verify_check_string(key_name, prv_buf))
+        # deserialized the private key
+        pvt_hex = verify_check_string(key_name, prv_buf)
+        hss_pub, hss_prv = HssSerializer.deserialize_private_key(pvt_hex)
+
         for msg_name in msg_name_list:
             print "signing file " + msg_name + " with key " + key_name
+            # read the message
             msg_file = open(msg_name, 'r')
             msg = msg_file.read()
+            # sign message
             tmp_sig = hss_prv.sign(msg)
+            # update the private key file with notated changes (mark used up keys)
             prv_file.seek(0)
             prv_file.write(calc_check_string(key_name) + hss_prv.serialize())
             prv_file.truncate()
+            # write the signature out to file
             sig = open(msg_name + ".sig", "w")
             sig.write(tmp_sig)
 

@@ -49,8 +49,9 @@ class LmsSerializer:
     @staticmethod
     def deserialize_private_key(hex_value):
         # parse out values
-        lms_type = LmsSerializer.get_lms_type(hex_value)
         lmots_type = LmsSerializer.get_lmots_type(hex_value)
+        lms_type = LmsSerializer.get_lms_type(hex_value)
+
         seed = hex_value[8:8 + lmots_type.n]
         i = hex_value[8 + lmots_type.n:8 + lmots_type.n + lms_type.len_i]
         q = hex_u32_to_int(hex_value[8 + lmots_type.n + lms_type.len_i:8 + lmots_type.n + lms_type.len_i + 4])

@@ -38,7 +38,9 @@ class HssPrivateKey(object):
         #    self.pub_sigs.append(self.pvt_keys[-2].sign(self.pub_keys[-1].serialize()))
 
         # sign message
-        lms_sig = self.pvt_keys[-1].sign(message)
+        lms = Lms(self.lms_type, self.lmots_type)
+        lms_sig = lms.sign(message, self.pub_keys[-1], self.pvt_keys[-1])
+        #lms_sig = self.pvt_keys[-1].sign(message)
         return serialize_hss_sig(self.levels - 1, self.pub_keys, self.pub_sigs, lms_sig)
 
     def num_signatures_remaining(self):
@@ -49,15 +51,6 @@ class HssPrivateKey(object):
 
     def serialize(self):
         return u32str(self.levels) + LmsSerializer.serialize_private_key(self.pvt_keys[0])
-
-    @classmethod
-    def deserialize(cls, hex_value):
-        levels = hex_u32_to_int(hex_value[0:4])
-        lms_type, lmots_type, seed, i, q = LmsSerializer.deserialize_private_key(hex_value)
-        lms_pub_key, lms_pvt_key = Lms(lms_type=lms_type, lmots_type=lmots_type).generate_key_pair(seed=seed, i=i, q=q)
-        return lms_pub_key, lms_pvt_key, levels
-
-        #return cls(levels, lms_type=prv.lms_type, lmots_type=prv.lmots_type, prv0=prv)
 
     @classmethod
     def deserialize_print_hex(cls, hex_value):

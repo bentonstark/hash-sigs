@@ -22,18 +22,26 @@ class Hss:
             self._entropy_source = entropy_source
 
     def generate_key_pair(self, levels=2):
+
+        # generate a new lms root key pair
+        lms_root_pub_key, lms_root_pvt_key = Lms(lms_type=self.lms_type, lmots_type=self.lmots_type).generate_key_pair()
+
+        # build the hss key pair tree based on the lms root pair
+        hss_pub_key, hss_pvt_key = self.build_key_pair_from_root(levels, lms_root_pub_key, lms_root_pvt_key)
+
+        return hss_pub_key, hss_pvt_key
+
+    def build_key_pair_from_root(self, levels, lms_root_pub_key, lms_root_pvt_key):
         lms_pub_list = list()
         lms_pvt_list = list()
         lsm_pub_sig_list = list()
 
+        # add the lms root key pair
+        lms_pub_list.append(lms_root_pub_key)
+        lms_pvt_list.append(lms_root_pvt_key)
+
+        # generate additional lms key pairs based on the number of levels needed for the tree
         lms = Lms(lms_type=self.lms_type, lmots_type=self.lmots_type)
-
-        # generate the first lms key pair
-        lms_pub_0, lms_pvt_0 = lms.generate_key_pair()
-        lms_pub_list.append(lms_pub_0)
-        lms_pvt_list.append(lms_pvt_0)
-
-        # generate additional lms key pairs based on the number of levels needed
         for i in xrange(1, levels):
             lms_pub_key, lms_pvt_key = lms.generate_key_pair()
             lms_pvt_list.append(lms_pvt_key)
@@ -42,12 +50,10 @@ class Hss:
             pub_key_ser = LmsSerializer.serialize_public_key(lms_pub_key)
             s = lms.sign(message=pub_key_ser, pub_key=lms_pub_key, pvt_key=lms_pvt_key)
             lsm_pub_sig_list.append(s)
-
         hss_pvt_key = HssPrivateKey(lms_type=self.lms_type, lmots_type=self.lmots_type, levels=levels,
                                     private_keys=lms_pvt_list, public_keys=lms_pub_list,
                                     public_key_signatures=lsm_pub_sig_list)
         hss_pub_key = HssPublicKey(lms_pub_list[0], levels)
-
         return hss_pub_key, hss_pvt_key
 
 

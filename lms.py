@@ -87,7 +87,7 @@ class Lms:
         leaf_num = pvt_key.leaf_num
         pvt_key.leaf_num = pvt_key.leaf_num + 1
         lms_sig = LmsSignature(self.lms_type, leaf_num, ots_sig, path)
-        LmsSerializer.serialize_signature(lms_sig)
+        return LmsSerializer.serialize_signature(lms_sig)
 
     def verify(self, message, sig, i, k):
         lms_type, q, lmots_sig, path = LmsSignature.deserialize_lms_sig(sig)
