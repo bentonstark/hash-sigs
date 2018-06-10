@@ -31,11 +31,20 @@ class HssPrivateKey(object):
             self.pub_sigs.pop()
 
         # auto-gen new keys?  This is not really going to work is it?
-        #while len(self.pvt_keys) < self.levels:
-        #    print "refreshing level " + str(len(self.pvt_keys))
-        #    self.pvt_keys.append(LmsPrivateKey(lms_type=self.lms_type, lmots_type=self.lmots_type))
-        #    self.pub_keys.append(self.pvt_keys[-1].get_public_key())
-        #    self.pub_sigs.append(self.pvt_keys[-2].sign(self.pub_keys[-1].serialize()))
+        # apparently this is some kind of hack that adds keys and signatures back on this list after
+        # popping them off - the serializer method fails to include the public key signatures if this
+        # code doesn't run
+        lms = Lms(lms_type=self.lms_type, lmots_type=self.lmots_type)
+        while len(self.pvt_keys) < self.levels:
+            print "refreshing level " + str(len(self.pvt_keys))
+            # generate a new lms root key pair
+            lms_pub_key, lms_pvt_key = lms.generate_key_pair()
+
+            self.pvt_keys.append(lms_pvt_key)
+            self.pub_keys.append(lms_pub_key)
+            pub_key_ser = LmsSerializer.serialize_public_key(lms_pub_key)
+            pub_key_ser_sig = lms.sign(message=pub_key_ser, pub_key=self.pub_keys[-2], pvt_key=self.pvt_keys[-2])
+            self.pub_sigs.append(pub_key_ser_sig)
 
         # sign message
         lms = Lms(self.lms_type, self.lmots_type)

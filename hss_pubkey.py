@@ -22,7 +22,7 @@ class HssPublicKey(object):
 
             # verify the chain of signed public keys
             key = self.pub1
-            for i in xrange(0, self.levels-1):
+            for i in xrange(0, self.levels - 1):
                 sig = sig_list[i]
                 msg = pub_list[i]
                 result = key.verify(msg, sig)
@@ -41,9 +41,10 @@ class HssPublicKey(object):
     @classmethod
     def deserialize(cls, hex_value):
         levels = hex_u32_to_int(hex_value[0:4])
-        root_pub = LmsSerializer.deserialize_private_key(hex_value[4:])
-        root_pub = LmsPublicKey.deserialize(hex_value[4:])
-        return cls(root_pub, levels)
+        lms_type, lmots_type, i, k = LmsSerializer.deserialize_public_key(hex_value[4:])
+        # TODO: build lmots keys using levels (probably similar to what I did for signing)
+        # TODO: build the nodes for the lms public key (See Lms.generate_key_pair())
+        return LmsPublicKey(lms_type=lms_type, lmots_type=lmots_type, i=i, k=k, nodes=None)
 
     def print_hex(self):
         PrintUtl.print_line()

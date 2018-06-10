@@ -12,6 +12,7 @@ from lms import Lms
 from lms_type import LmsType
 from lmots import Lmots
 from lmots_type import LmotsType
+from lms_serializer import LmsSerializer
 
 
 test_message = "Hello, world!"
@@ -21,7 +22,7 @@ def serialize_hss_sig(levels_minus_one, pub_list, sig_list, msg_sig):
     result = u32str(levels_minus_one)
     for i in xrange(0, levels_minus_one):
         result = result + sig_list[i]
-        result = result + pub_list[i + 1].serialize()
+        result = result + LmsSerializer.serialize_public_key(pub_list[i + 1])
     result = result + msg_sig
     return result
 

@@ -58,6 +58,16 @@ class LmsSerializer:
         return lms_type, lmots_type, seed, i, q
 
     @staticmethod
+    def deserialize_public_key(hex_value):
+        # parse out values
+        lmots_type = LmsSerializer.get_lmots_type(hex_value)
+        lms_type = LmsSerializer.get_lms_type(hex_value)
+
+        i = hex_value[8:8 + lms_type.len_i]
+        k = hex_value[8 + lms_type.len_i:8 + lms_type.len_i + lms_type.m]
+        return lms_type, lmots_type, i, k
+
+    @staticmethod
     def serialize_signature(signature):
         return u32str(signature.q) + signature.signature + u32str(signature.type_code.type_code) \
                + serialize_array(signature.path)

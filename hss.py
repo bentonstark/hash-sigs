@@ -48,7 +48,9 @@ class Hss:
             lms_pub_list.append(lms_pub_key)
             # serialize the lms public key and sign it with the lms private key
             pub_key_ser = LmsSerializer.serialize_public_key(lms_pub_key)
-            s = lms.sign(message=pub_key_ser, pub_key=lms_pub_key, pvt_key=lms_pvt_key)
+            # TODO: the signatures may need to come from the previous lms private key and not the current one
+            s = lms.sign(message=pub_key_ser, pub_key=lms_pub_list[-2], pvt_key=lms_pvt_list[-2])
+            #s = lms.sign(message=pub_key_ser, pub_key=lms_pub_key, pvt_key=lms_pvt_key)
             lsm_pub_sig_list.append(s)
         hss_pvt_key = HssPrivateKey(lms_type=self.lms_type, lmots_type=self.lmots_type, levels=levels,
                                     private_keys=lms_pvt_list, public_keys=lms_pub_list,
