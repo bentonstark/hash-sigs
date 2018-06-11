@@ -2,7 +2,6 @@ from utils import u32str
 from print_util import PrintUtl
 
 
-
 class LmsPublicKey(object):
     """
     Leighton-Micali Signature Public Key

@@ -36,9 +36,9 @@ def deserialize_hss_sig(hex_value):
     publist = list()
     tmp = hex_value[4:]
     for i in xrange(0, levels - 1):
-        lms_sig, tmp = LmsSignature.parse_lms_sig(tmp)
+        lms_sig, tmp = LmsSerializer.parse_lms_sig(tmp)
         siglist.append(lms_sig)
-        lms_pub, tmp = LmsPublicKey.parse(tmp)
+        lms_pub, tmp = LmsSerializer.parse_public_key(tmp)
         publist.append(lms_pub)
     msg_sig = tmp
     return levels, publist, siglist, msg_sig

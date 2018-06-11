@@ -2,6 +2,7 @@ from utils import u32str, hex_u32_to_int, serialize_array
 from utils import u32str, hex_u32_to_int
 from lmots_type import LmotsType
 from lmots import LmotsPublicKey
+from lmots_sig import LmotsSignature
 
 
 class LmotsSerializer:
@@ -38,7 +39,7 @@ class LmotsSerializer:
         for i in xrange(0, lmots_type.p):
             y.append(hex_value[pos:pos + lmots_type.n])
             pos = pos + lmots_type.n
-        return LmotsSerializer(c, y, lmots_type)
+        return LmotsSignature(c=c, y=y, lmots_type=lmots_type)
 
     @staticmethod
     def bytes(lmots_type):

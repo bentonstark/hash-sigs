@@ -59,12 +59,16 @@ class Lms:
         lms_pvt_key = LmsPrivateKey(lms_type=self.lms_type, lmots_type=self.lmots_type, private_keys=priv,
                                     seed=seed, i=i, q_init=q)
 
-        pub_lmots_nodes = {}
-        lms_pub_value = self._T(1, pub_lmots_nodes, pub, i)
-        lms_pub_key = LmsPublicKey(lms_type=self.lms_type, lmots_type=self.lmots_type, i=i, k=lms_pub_value,
-                                   nodes=pub_lmots_nodes)
+        lms_pub_key = self.rebuild_public_key(i, pub)
 
         return lms_pub_key, lms_pvt_key
+
+    def rebuild_public_key(self, i, k):
+        pub_lmots_nodes = {}
+        lms_pub_value = self._T(1, pub_lmots_nodes, k, i)
+        lms_pub_key = LmsPublicKey(lms_type=self.lms_type, lmots_type=self.lmots_type, i=i, k=lms_pub_value,
+                                   nodes=pub_lmots_nodes)
+        return lms_pub_key
 
     # Algorithm for computing root and other nodes (alternative to Algorithm 6)
     #
@@ -83,14 +87,13 @@ class Lms:
         lmots = Lmots(self.lmots_type)
         ots_sig = lmots.sign(message, pvt_key.get_next_ots_priv_key())
         path = pub_key.get_path(pvt_key.leaf_num + 2 ** self.lms_type.h)
-        # path = pvt_key.get_path(pvt_key.leaf_num + 2 ** self.lms_type.h)
         leaf_num = pvt_key.leaf_num
         pvt_key.leaf_num = pvt_key.leaf_num + 1
         lms_sig = LmsSignature(self.lms_type, leaf_num, ots_sig, path)
         return LmsSerializer.serialize_signature(lms_sig)
 
     def verify(self, message, sig, i, k):
-        lms_type, q, lmots_sig, path = LmsSignature.deserialize_lms_sig(sig)
+        lms_type, q, lmots_sig, path = LmsSerializer.deserialize_lms_sig(sig)
 
         node_num = q + 2 ** self.lms_type.h
         if lms_type != self.lms_type:
@@ -98,15 +101,15 @@ class Lms:
         path_value = iter(path)
 
         lmots = Lmots(self.lmots_type)
-        sig_pub_key = lmots.extract_public_key(lmots_sig=lmots_sig, s=i + u32str(q), message=message)
-        sig_pub_key = sha256_hash(i + sig_pub_key + u32str(node_num) + D_LEAF)
+        sig_pub_key = lmots.extract_public_key(signature=lmots_sig, s=i + u32str(q), message=message)
+        sig_pub_key_hash = sha256_hash(i + sig_pub_key.k + u32str(node_num) + D_LEAF)
         while node_num > 1:
             if node_num % 2:
-                sig_pub_key = sha256_hash(i + path_value.next() + sig_pub_key + u32str(node_num / 2) + D_INTR)
+                sig_pub_key_hash = sha256_hash(i + path_value.next() + sig_pub_key_hash + u32str(node_num / 2) + D_INTR)
             else:
-                sig_pub_key = sha256_hash(i + sig_pub_key + path_value.next() + u32str(node_num / 2) + D_INTR)
+                sig_pub_key_hash = sha256_hash(i + sig_pub_key_hash + path_value.next() + u32str(node_num / 2) + D_INTR)
             node_num = node_num / 2
 
-        is_valid = sig_pub_key == k
+        is_valid = sig_pub_key_hash == k
         return is_valid
 

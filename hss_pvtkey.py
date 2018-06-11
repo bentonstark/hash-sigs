@@ -49,7 +49,6 @@ class HssPrivateKey(object):
         # sign message
         lms = Lms(self.lms_type, self.lmots_type)
         lms_sig = lms.sign(message, self.pub_keys[-1], self.pvt_keys[-1])
-        #lms_sig = self.pvt_keys[-1].sign(message)
         return serialize_hss_sig(self.levels - 1, self.pub_keys, self.pub_sigs, lms_sig)
 
     def num_signatures_remaining(self):

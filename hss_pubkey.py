@@ -4,6 +4,7 @@ from sig_tests import deserialize_hss_sig
 from lms_pubkey import LmsPublicKey
 from print_util import PrintUtl
 from lms import LmsSerializer
+from lms import Lms
 
 
 class HssPublicKey(object):
@@ -22,12 +23,14 @@ class HssPublicKey(object):
 
             # verify the chain of signed public keys
             key = self.pub1
-            for i in xrange(0, self.levels - 1):
-                sig = sig_list[i]
-                msg = pub_list[i]
-                result = key.verify(msg, sig)
+            lms = Lms(key.lms_type, key.lmots_type)
+            for j in xrange(0, self.levels - 1):
+                sig = sig_list[j]
+                msg = pub_list[j]
+                result = lms.verify(msg, sig, key.i, key.k)
                 if result is False:
                     return result
+                
                 key = LmsPublicKey.deserialize(msg)
             return key.verify(message, lms_sig)
 
@@ -42,9 +45,8 @@ class HssPublicKey(object):
     def deserialize(cls, hex_value):
         levels = hex_u32_to_int(hex_value[0:4])
         lms_type, lmots_type, i, k = LmsSerializer.deserialize_public_key(hex_value[4:])
-        # TODO: build lmots keys using levels (probably similar to what I did for signing)
-        # TODO: build the nodes for the lms public key (See Lms.generate_key_pair())
-        return LmsPublicKey(lms_type=lms_type, lmots_type=lmots_type, i=i, k=k, nodes=None)
+        lms_root_pub_key = LmsPublicKey(lms_type=lms_type, lmots_type=lmots_type, i=i, k=k, nodes=None)
+        return cls(root_pub=lms_root_pub_key, levels=levels)
 
     def print_hex(self):
         PrintUtl.print_line()
