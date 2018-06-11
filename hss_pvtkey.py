@@ -1,64 +1,64 @@
-from need_to_sort import err_private_key_exhausted, lmots_sha256_n32_w1, lmots_sha256_n32_w8, lms_sha256_m32_h05
 from utils import u32str, hex_u32_to_int
 from sig_tests import serialize_hss_sig
 from hss_pubkey import HssPublicKey
 from lms_pvtkey import LmsPrivateKey
 from print_util import PrintUtl
+from lms_serializer import LmsSerializer
+from lms import Lms
 
 
 class HssPrivateKey(object):
     """
     Hierarchical Signature System Private Key
     """
-    def __init__(self, levels=2, lms_type=lms_sha256_m32_h05, lmots_type=lmots_sha256_n32_w8, prv0=None):
+    def __init__(self, lms_type, lmots_type, levels, private_keys, public_keys, public_key_signatures):
+        self.lms_type = lms_type
+        self.lmots_type = lmots_type
         self.levels = levels
-        self.prv = list()
-        self.pub = list()
-        self.sig = list()
-        if prv0 is None:
-            prv0 = LmsPrivateKey(lms_type=lms_type, lmots_type=lmots_type)
-        self.prv.append(prv0)
-        self.pub.append(self.prv[0].get_public_key())
-        for i in xrange(1, self.levels):
-            self.prv.append(LmsPrivateKey(lms_type=lms_type, lmots_type=lmots_type))
-            self.pub.append(self.prv[-1].get_public_key())
-            self.sig.append(self.prv[-2].sign(self.pub[-1].serialize()))
+        self.pvt_keys = private_keys
+        self.pub_keys = public_keys
+        self.pub_sigs = public_key_signatures
 
     def sign(self, message):
-        while self.prv[-1].is_exhausted():
-            print "level " + str(len(self.prv)) + " is exhausted"
-            if len(self.prv) == 1:
-                raise ValueError(err_private_key_exhausted)
-            self.prv.pop()
-            self.pub.pop()
-            self.sig.pop()
-        while len(self.prv) < self.levels:
-            print "refreshing level " + str(len(self.prv))
-            self.prv.append(LmsPrivateKey(lms_type=self.prv[0].lms_type, lmots_type=self.prv[0].lmots_type))
-            self.pub.append(self.prv[-1].get_public_key())
-            self.sig.append(self.prv[-2].sign(self.pub[-1].serialize()))
+
+        # is this some kind of clean-up attempt for exhausted keys?
+        while self.pvt_keys[-1].is_exhausted():
+            print "level " + str(len(self.pvt_keys)) + " is exhausted"
+            if len(self.pvt_keys) == 1:
+                raise ValueError("private hss (lms) key exhausted")
+            self.pvt_keys.pop()
+            self.pub_keys.pop()
+            self.pub_sigs.pop()
+
+        # auto-gen new keys?  This is not really going to work is it?
+        # apparently this is some kind of hack that adds keys and signatures back on this list after
+        # popping them off - the serializer method fails to include the public key signatures if this
+        # code doesn't run
+        lms = Lms(lms_type=self.lms_type, lmots_type=self.lmots_type)
+        while len(self.pvt_keys) < self.levels:
+            print "refreshing level " + str(len(self.pvt_keys))
+            # generate a new lms root key pair
+            lms_pub_key, lms_pvt_key = lms.generate_key_pair()
+
+            self.pvt_keys.append(lms_pvt_key)
+            self.pub_keys.append(lms_pub_key)
+            pub_key_ser = LmsSerializer.serialize_public_key(lms_pub_key)
+            pub_key_ser_sig = lms.sign(message=pub_key_ser, pub_key=self.pub_keys[-2], pvt_key=self.pvt_keys[-2])
+            self.pub_sigs.append(pub_key_ser_sig)
 
         # sign message
-        lms_sig = self.prv[-1].sign(message)
-        return serialize_hss_sig(self.levels-1, self.pub, self.sig, lms_sig)
-
-    def get_public_key(self):
-        return HssPublicKey(self.prv[0].get_public_key(), self.levels)
+        lms = Lms(self.lms_type, self.lmots_type)
+        lms_sig = lms.sign(message, self.pub_keys[-1], self.pvt_keys[-1])
+        return serialize_hss_sig(self.levels - 1, self.pub_keys, self.pub_sigs, lms_sig)
 
     def num_signatures_remaining(self):
-        unused = self.prv[0].num_signatures_remaining()
+        unused = self.pvt_keys[0].num_signatures_remaining()
         for i in xrange(1,self.levels):
-            unused = unused * self.prv[i].max_signatures() + self.prv[i].num_signatures_remaining()
+            unused = unused * self.pvt_keys[i].max_signatures() + self.pvt_keys[i].num_signatures_remaining()
         return unused
 
     def serialize(self):
-        return u32str(self.levels) + self.prv[0].serialize()
-
-    @classmethod
-    def deserialize(cls, hex_value):
-        levels = hex_u32_to_int(hex_value[0:4])
-        prv = LmsPrivateKey.deserialize(hex_value[4:])
-        return cls(levels, lms_type=prv.lms_type, lmots_type=prv.lmots_type, prv0=prv)
+        return u32str(self.levels) + LmsSerializer.serialize_private_key(self.pvt_keys[0])
 
     @classmethod
     def deserialize_print_hex(cls, hex_value):
@@ -83,7 +83,7 @@ class HssPrivateKey(object):
         PrintUtl.print_line()
         print "HSS private key"
         PrintUtl.print_hex("levels", u32str(self.levels))
-        for prv in self.prv:
+        for prv in self.pvt_keys:
             prv.print_hex()
         PrintUtl.print_line()
 
@@ -91,7 +91,7 @@ class HssPrivateKey(object):
     def get_param_list(cls):
         param_list = list()
         for x in [ lmots_sha256_n32_w1 ]: # lmots_params.keys():
-            for y in [lms_sha256_m32_h05]: # lms_params.keys():
+            for y in [LMS_SHA256_M32_H05]: # lms_params.keys():
                 for l in [2,3]:
                     param_list.append({'lmots_type': x, 'lms_type': y, 'levels': l})
         return param_list
