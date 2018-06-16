@@ -1,5 +1,4 @@
 from utils import u32str, hex_u32_to_int, serialize_array
-from utils import u32str, hex_u32_to_int
 from lmots_type import LmotsType
 from lmots import LmotsPublicKey
 from lmots_sig import LmotsSignature

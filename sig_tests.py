@@ -1,6 +1,5 @@
 import sys
 
-from need_to_sort import err_private_key_exhausted, err_bad_length, err_bad_value, err_list, retcode_get_string
 from merkle import Merkle
 from utils import u32str, hex_u32_to_int, string_to_hex
 from lms_sig import LmsSignature
@@ -31,7 +30,7 @@ def deserialize_hss_sig(hex_value):
     hss_max_levels = 8
     levels = hex_u32_to_int(hex_value[0:4]) + 1
     if levels > hss_max_levels:
-        raise ValueError(err_bad_value)
+        raise ValueError("levels exceeds max level value")
     siglist = list()
     publist = list()
     tmp = hex_value[4:]
@@ -79,7 +78,7 @@ def checksum_test():
 def print_as_coefs(x, w, p):
     num_coefs = len(x) * (8 / w)
     if p > num_coefs:
-        raise ValueError(err_bad_length)
+        raise ValueError("p is invalid")
     for i in xrange(0, p):
         print str(Merkle.coef(x, i, w))
     print "\n"
@@ -205,7 +204,4 @@ def ntimesig_test_param(alg, verbose=False):
 
 
 def err_handle(err):
-    if err.args[0] in err_list:
-        print str(err.args)
-    else:
-        raise Exception(err)
+    raise Exception(err)

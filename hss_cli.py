@@ -44,7 +44,6 @@ import sys
 import os.path
 from hss_pubkey import HssPublicKey
 from hss_pvtkey import HssPrivateKey
-from need_to_sort import retcode_get_string
 from print_util import PrintUtl
 from sig_tests import print_hss_sig, checksum_test, ntimesig_test
 from utils import sha256_hash
@@ -98,7 +97,6 @@ def verify_check_string(path, buffer):
 # time via os.path.getmtime(path), but it might be tricky to
 # predict/control that value, especially in a portable way.
 # Similarly, the output of uname() could be included.
-
 
 
 class HssMenu:
@@ -227,7 +225,7 @@ class HssMenu:
             if result:
                 print "VALID"
             else:
-                print "INVALID (" + retcode_get_string(result) + ")"
+                print "INVALID (" + result + ")"
 
     @staticmethod
     def read_handler(args):

@@ -3,8 +3,6 @@ import struct
 
 from Crypto.Hash import SHA256
 
-from need_to_sort import err_bad_length
-
 
 def sha256_hash(x):
     """
@@ -52,7 +50,7 @@ def hex_u32_to_int(hex_value):
     :return: integer
     """
     if len(hex_value) != 4:
-        raise ValueError(err_bad_length, str(len(hex_value)))
+        raise ValueError("hex_value length invalid", str(len(hex_value)))
     return int(hex_value.encode('hex'), 16)
 
 

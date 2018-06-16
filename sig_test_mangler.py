@@ -1,4 +1,6 @@
-from need_to_sort import entropySource
+from Crypto import Random
+
+entropySource = Random.new()
 
 
 class ByteFlipMangler:
