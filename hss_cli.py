@@ -50,6 +50,10 @@ from sig_tests import print_hss_sig, checksum_test, ntimesig_test
 from utils import sha256_hash
 from hss import Hss
 from hss_serializer import HssSerializer
+import argparse
+from version import PROGRAM_VERSION
+from argparse import RawDescriptionHelpFormatter
+
 
 # ***************************************************************
 #                                                               |
@@ -89,171 +93,188 @@ def verify_check_string(path, buffer):
     else:
         return buffer[32:]
 
+
 # Implementation note: it might be useful to add in the last-modified
 # time via os.path.getmtime(path), but it might be tricky to
 # predict/control that value, especially in a portable way.
 # Similarly, the output of uname() could be included.
-    
-
-def usage(name):
-    """
-    Display the program usage options.
-
-    :param name: Name of the file being executed
-    :return:
-    """
-    print "commands:"
-    print name + " genkey <name>"                                      
-    print "   creates <name>.prv and <name>.pub"
-    print ""
-    print name + " sign <file> [ <file2> ... ] <prvname>"
-    print "   updates <prvname>, then writes signature of <file> to <file>.sig"
-    print ""
-    print name + " verify <pubname> <file> [ <file2> ... ]"
-    print "   verifies file using public key"
-    print ""
-    print name + " read <file> [ <file2> ... ]"
-    print "   read and pretty-print .sig, .pub, .prv file(s)"
-    print ""
-    print name + " test [all | hss | lms | lmots | checksum ]"
-    print "   performs algorithm tests"
-    sys.exit(1)
 
 
-if __name__ == "__main__":
 
-    if len(sys.argv) < 2 or sys.argv[1] not in ["genkey", "sign", "verify", "read", "test"]:
-        print "error: first argument must be a command (genkey, sign, verify, read, or test)"
-        usage(sys.argv[0])
-        sys.exit()
+class HssMenu:
+    # program name
+    PROGRAM_NAME = "hss_cli"
+    MENU_MAIN_DESC = "HSS program"
 
-    if sys.argv[1] == "test":
-        if len(sys.argv) == 2: 
-            print "missing argument (expected checksum, lmots, lms, hss, or all)"
-            usage(sys.argv[0])
-            
-        test_checksum = test_lmots = test_lms = test_hss = False
-        if "checksum" in sys.argv[2:]:
-            test_checksum = True
-        if "lmots" in sys.argv[2:]:
-            test_lmots = True
-        if "lms" in sys.argv[2:]:
-            test_lms = True
-        if "hss" in sys.argv[2:]:
-            test_hss = True
-        if "all" in sys.argv[2:]:
-            test_checksum = test_lmots = test_lms = test_hss = True
+    @staticmethod
+    def build_menu():
+        # build main parser
+        parser = argparse.ArgumentParser(prog=HssMenu.PROGRAM_NAME, description=HssMenu.MENU_MAIN_DESC)
+        parser.add_argument('-V', '--version', action='version', version='%(prog)s (version ' + PROGRAM_VERSION + ')')
 
-        if test_checksum:
-            checksum_test()
-        if test_lmots:
-            ntimesig_test("lmots", verbose=False)
-        if test_lms:
-            ntimesig_test("lms", verbose=True)
-        if test_hss:
-            ntimesig_test(HssPrivateKey, verbose=True)
+        # build the sub program parsers
+        main_subs = parser.add_subparsers(title=HssMenu.PROGRAM_NAME + " commands")
+        HssMenu.build_genkey_menu(main_subs)
+        HssMenu.build_sign_menu(main_subs)
+        HssMenu.build_verify_menu(main_subs)
+        HssMenu.build_read_menu(main_subs)
 
-    if sys.argv[1] == "genkey":
-        if len(sys.argv) >= 3:
-            for key_name in sys.argv[2:]:
-                print "generating key " + key_name
-                hss = Hss()
-                hss_pub, hss_prv = hss.generate_key_pair()
-                prv_file = open(key_name + ".prv", 'w')
-                prv_file.write(calc_check_string(key_name + ".prv") + hss_prv.serialize())
-                pub_file = open(key_name + ".pub", 'w')
-                pub_file.write(hss_pub.serialize())
-        else:
-            print "error: missing keyname argument(s)\n"
-            usage()
-            
-    if sys.argv[1] == "sign":
-        key_name = None
-        msg_name_list = list()
-        for f in sys.argv[2:]:
-            if ".prv" in f:
-                if key_name is not None:
-                    print "error: too many private keys given on command line"
-                key_name = f
-            else:
-                msg_name_list.append(f)
-        if key_name is None:
-            print "error: no private key given on command line"
-            usage(sys.argv[0])
-        if len(msg_name_list) is 0:
-            print "error: no messages given on command line"
-            usage(sys.argv[0])
-        # read in the private key
-        prv_file = open(key_name, "r+")
+        # parse command line args and invoke handler functions
+        args = parser.parse_args()
+        args.func(args)
+
+    @staticmethod
+    def build_genkey_menu(main_subs):
+        gen_key = main_subs.add_parser('genkey', help="Creates a <name>.prv and <name>.pub file",
+                                       formatter_class=RawDescriptionHelpFormatter,
+                                       description="Generates a new HSS key pair and writes the keys to a public and "
+                                                   "private key file.\n\n\n"
+                                                   "Usage Examples:\n"
+                                                   "     genkey -key my_key\n\n")
+        gen_key_req = gen_key.add_argument_group('required arguments')
+        gen_key_req.add_argument("-key", dest="key_name", required=True, help="Name of the key to be generated.")
+        gen_key_req.add_argument("-out", dest="out", default=".", required=False,
+                                 help="Output file path for key file.")
+        gen_key.set_defaults(func=HssMenu.gen_key_handler)
+
+    @staticmethod
+    def build_sign_menu(main_subs):
+        sign = main_subs.add_parser('sign', help="Signs one ore more files and writes output as a detached "
+                                                 "signature file.",
+                                    formatter_class=RawDescriptionHelpFormatter,
+                                    description="Signs one or more files using the specified private key file."
+                                                "Signature is written to file system as <file>.sig.\n\n\n"
+                                                "Usage Examples:\n"
+                                                "     sign -key my_key -files my_file1 my_file2\n\n")
+        sign_req = sign.add_argument_group('required arguments')
+        sign_req.add_argument("-key", dest="key_name", required=True, help="Name of the key to be generated.")
+        sign_req.add_argument("-files", dest="file_list", nargs='+', required=True,
+                              help="One or more files to sign")
+        sign.set_defaults(func=HssMenu.sign_handler)
+
+    @staticmethod
+    def build_verify_menu(main_subs):
+        verify = main_subs.add_parser('verify', help="Verifies one ore more signature files.",
+                                      formatter_class=RawDescriptionHelpFormatter,
+                                      description="Verifies one or more files using the specified public key file.\n\n"
+                                                  "Usage Examples:\n"
+                                                  "     verify -key my_key -files my_file1 my_file2\n\n")
+        verify_req = verify.add_argument_group('required arguments')
+        verify_req.add_argument("-key", dest="key_name", required=True, help="Name of the key to be generated.")
+        verify_req.add_argument("-files", dest="file_list", nargs='+', required=True,
+                                help="One or more files to verify")
+        verify.set_defaults(func=HssMenu.verify_handler)
+
+    @staticmethod
+    def build_read_menu(main_subs):
+        read = main_subs.add_parser('read', help="Reads a key file or signature file and displays the data.",
+                                    formatter_class=RawDescriptionHelpFormatter,
+                                    description="Reads a key file or signature file and displays the data.\n\n"
+                                                "Usage Examples:\n"
+                                                "     read -files mykey.prv\n\n")
+        read_req = read.add_argument_group('required arguments')
+        read_req.add_argument("-files", dest="file_list", nargs='+', required=True, help="One or more files to read")
+        read.set_defaults(func=HssMenu.read_handler)
+
+    @staticmethod
+    def gen_key_handler(args):
+        hss = Hss()
+        hss_pub, hss_prv = hss.generate_key_pair()
+        pvt_file_path = args.out + "/" + args.key_name + ".prv"
+        pub_file_path = args.out + "/" + args.key_name + ".pub"
+        prv_file = open(pvt_file_path, 'w')
+        prv_file.write(calc_check_string(pvt_file_path) + hss_prv.serialize())
+        pub_file = open(pub_file_path, 'w')
+        pub_file.write(hss_pub.serialize())
+
+    @staticmethod
+    def sign_handler(args):
+        # read private key file
+        prv_file = open(args.key_name + ".prv", "r+")
         prv_buf = prv_file.read()
         # deserialized the private key
-        pvt_hex = verify_check_string(key_name, prv_buf)
+        pvt_hex = verify_check_string(args.key_name + ".prv", prv_buf)
         hss_pub, hss_prv = HssSerializer.deserialize_private_key(pvt_hex)
 
-        for msg_name in msg_name_list:
-            print "signing file " + msg_name + " with key " + key_name
+        # loop file list and sign each file with the specified private key
+        for file_name in args.file_list:
+            print "signing file " + file_name + " with key " + args.key_name
             # read the message
-            msg_file = open(msg_name, 'r')
+            msg_file = open(file_name, 'r')
             msg = msg_file.read()
             # sign message
             tmp_sig = hss_prv.sign(msg)
             # update the private key file with notated changes (mark used up keys)
             prv_file.seek(0)
-            prv_file.write(calc_check_string(key_name) + hss_prv.serialize())
+            prv_file.write(calc_check_string(args.key_name + ".prv") + hss_prv.serialize())
             prv_file.truncate()
             # write the signature out to file
-            sig = open(msg_name + ".sig", "w")
+            sig = open(file_name + ".sig", "w")
             sig.write(tmp_sig)
 
-    if sys.argv[1] == "verify":
-        pub_name = None
-        msg_name_list = list()
-        for f in sys.argv[2:]:
-            if ".pub" in f:
-                if pub_name is not None:
-                    print "error: too many public keys given on command line"
-                    usage(sys.argv[0])
-                pub_name = f
-            else:
-                msg_name_list.append(f)
-        if pub_name is None:
-            print "error: no public key given on command line"
-            usage(sys.argv[0])
-        if len(msg_name_list) is 0:
-            print "error: no file(s) to be verified given on command line"
-            usage(sys.argv[0])
-        pubfile = open(pub_name, 'r')
-        pub = HssPublicKey.deserialize(pubfile.read())
-        for msg_name in msg_name_list:
-            sig_name = msg_name + ".sig"
-            print "verifying signature " + sig_name + " on file " + msg_name + " with pubkey " + pub_name
-            sig_file = open(sig_name, 'r')
-            sig = sig_file.read()
-            msg_file = open(msg_name, 'r')
-            msg = msg_file.read()
+    @staticmethod
+    def verify_handler(args):
+        pub_file = open(args.key_name + ".pub", 'r')
+        pub = HssPublicKey.deserialize(pub_file.read())
+        for file_name in args.file_list:
+            sig_name = file_name + ".sig"
+            print "verifying signature " + sig_name + " on file " + file_name + " with pubkey " + args.key_name + ".pub"
+            data_sig_file = open(sig_name, 'r')
+            sig = data_sig_file.read()
+            data_file = open(file_name, 'r')
+            msg = data_file.read()
             result = pub.verify(msg, sig)
             if result:
                 print "VALID"
             else:
                 print "INVALID (" + retcode_get_string(result) + ")"
 
-    if sys.argv[1] == "read":
-        if len(sys.argv) < 3:
-            print 'error: expecting filename(s) after "read" command'
-            usage(sys.argv[0])
-
-        for f in sys.argv[2:]:
-            in_file = open(f, 'r')
+    @staticmethod
+    def read_handler(args):
+        for file_name in args.file_list:
+            in_file = open(file_name, 'r')
             buf = in_file.read()
-            if ".sig" in f:
+            if ".sig" in file_name:
                 print_hss_sig(buf)
-            elif ".pub" in f:
+            elif ".pub" in file_name:
                 HssPublicKey.deserialize(buf).print_hex()
-            elif ".prv" in f:
+            elif ".prv" in file_name:
                 # strip check string from start of buffer
                 HssPrivateKey.deserialize_print_hex(buf[32:])
-            else:                
+            else:
                 PrintUtl.print_line()
                 PrintUtl.print_hex("Message", buf)
                 PrintUtl.print_line()
 
+
+if __name__ == "__main__":
+    # build parser menu
+    HssMenu.build_menu()
+
+    # if sys.argv[1] == "test":
+    #     if len(sys.argv) == 2:
+    #         print "missing argument (expected checksum, lmots, lms, hss, or all)"
+    #         usage(sys.argv[0])
+    #
+    #     test_checksum = test_lmots = test_lms = test_hss = False
+    #     if "checksum" in sys.argv[2:]:
+    #         test_checksum = True
+    #     if "lmots" in sys.argv[2:]:
+    #         test_lmots = True
+    #     if "lms" in sys.argv[2:]:
+    #         test_lms = True
+    #     if "hss" in sys.argv[2:]:
+    #         test_hss = True
+    #     if "all" in sys.argv[2:]:
+    #         test_checksum = test_lmots = test_lms = test_hss = True
+    #
+    #     if test_checksum:
+    #         checksum_test()
+    #     if test_lmots:
+    #         ntimesig_test("lmots", verbose=False)
+    #     if test_lms:
+    #         ntimesig_test("lms", verbose=True)
+    #     if test_hss:
+    #         ntimesig_test(HssPrivateKey, verbose=True)
+    #
+    #
