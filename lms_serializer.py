@@ -1,4 +1,3 @@
-from need_to_sort import err_bad_value
 from utils import u32str, hex_u32_to_int, serialize_array
 from print_util import PrintUtl
 from lms_type import LmsType
@@ -78,7 +77,7 @@ class LmsSerializer:
         lms_type = LmsSerializer.get_lms_type(hex_value[pos:pos+4])
 
         if q >= 2 ** lms_type.h:
-            raise ValueError(err_bad_value)
+            raise ValueError("value of q is not valid")
         pos = pos + 4
         path = list()
         for i in xrange(0, lms_type.h):

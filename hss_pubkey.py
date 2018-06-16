@@ -1,4 +1,4 @@
-from need_to_sort import err_list, INVALID_HSS_LEVEL_ERR, INVALID_WITH_REASON
+
 from utils import u32str, hex_u32_to_int
 from sig_tests import deserialize_hss_sig
 from lms_pubkey import LmsPublicKey
@@ -16,30 +16,26 @@ class HssPublicKey(object):
         self.levels = levels
 
     def verify(self, message, sig):
-        try:
-            levels, pub_list, sig_list, lms_sig = deserialize_hss_sig(sig)
-            if levels != self.levels:
-                return INVALID_HSS_LEVEL_ERR
+        levels, pub_list, sig_list, lms_sig = deserialize_hss_sig(sig)
+        if levels != self.levels:
+            raise ValueError("invalid HSS level")
 
-            # verify the chain of signed public keys
-            key = self.pub1
-            lms = Lms(key.lms_type, key.lmots_type)
-            i = key.i
-            k = key.k
-            for j in xrange(0, self.levels - 1):
-                sig = sig_list[j]
-                msg = pub_list[j]
-                result = lms.verify(msg, sig, i, k)
-                if result is False:
-                    return result
-                lms_type, lmots_type, i, k = LmsSerializer.deserialize_public_key(msg)
+        # verify the chain of signed public keys
+        key = self.pub1
+        lms = Lms(key.lms_type, key.lmots_type)
+        i = key.i
+        k = key.k
+        for j in xrange(0, self.levels - 1):
+            sig = sig_list[j]
+            msg = pub_list[j]
+            result = lms.verify(msg, sig, i, k)
+            if result is False:
+                return result
+            lms_type, lmots_type, i, k = LmsSerializer.deserialize_public_key(msg)
 
-            # TODO: why does key get re-assigned so many times?
-            return lms.verify(message, lms_sig, i, k)
+        # TODO: why does key get re-assigned so many times?
+        return lms.verify(message, lms_sig, i, k)
 
-        except ValueError as err:
-            if err.args[0] in err_list:
-                return INVALID_WITH_REASON
 
     def serialize(self):
         return u32str(self.levels) + LmsSerializer.serialize_public_key(self.pub1)

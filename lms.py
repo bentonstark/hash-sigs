@@ -3,7 +3,7 @@ from lms_sig import LmsSignature
 from lmots import Lmots
 from lmots_type import LmotsType
 from lms_type import LmsType
-from utils import sha256_hash, u32str, hex_u32_to_int
+from utils import sha256_hash, u32str
 from need_to_sort import D_INTR, D_LEAF
 from lms_pvtkey import LmsPrivateKey
 from lms_pubkey import LmsPublicKey

@@ -1,6 +1,5 @@
 from utils import u32str
 from print_util import PrintUtl
-from lms_serializer import LmsSerializer
 
 
 class LmsPrivateKey(object):
