@@ -5,6 +5,7 @@ from lms import Lms
 from lms_serializer import LmsSerializer
 from hss_pvtkey import HssPrivateKey
 from hss_pvtkey import HssPublicKey
+from hss_serializer import HssSerializer
 
 
 class Hss:
@@ -57,5 +58,55 @@ class Hss:
         hss_pub_key = HssPublicKey(lms_pub_list[0], levels)
         return hss_pub_key, hss_pvt_key
 
+    def sign(self, message, pvt_key):
 
+        # is this some kind of clean-up attempt for exhausted keys?
+        while pvt_key.pvt_keys[-1].is_exhausted():
+            print "level " + str(len(pvt_key.pvt_keys)) + " is exhausted"
+            if len(pvt_key.pvt_keys) == 1:
+                raise ValueError("private hss (lms) key exhausted")
+            pvt_key.pvt_keys.pop()
+            pvt_key.pub_keys.pop()
+            pvt_key.pub_sigs.pop()
 
+        # auto-gen new keys?  This is not really going to work is it?
+        # apparently this is some kind of hack that adds keys and signatures back on this list after
+        # popping them off - the serializer method fails to include the public key signatures if this
+        # code doesn't run
+        lms = Lms(lms_type=self.lms_type, lmots_type=self.lmots_type)
+        while len(pvt_key.pvt_keys) < pvt_key.levels:
+            print "refreshing level " + str(len(pvt_key.pvt_keys))
+            # generate a new lms root key pair
+            lms_pub_key, lms_pvt_key = lms.generate_key_pair()
+
+            pvt_key.pvt_keys.append(lms_pvt_key)
+            pvt_key.pub_keys.append(lms_pub_key)
+            pub_key_ser = LmsSerializer.serialize_public_key(lms_pub_key)
+            pub_key_ser_sig = lms.sign(message=pub_key_ser, pub_key=pvt_key.pub_keys[-2], pvt_key=pvt_key.pvt_keys[-2])
+            pvt_key.pub_sigs.append(pub_key_ser_sig)
+
+        # sign message
+        lms = Lms(self.lms_type, self.lmots_type)
+        lms_sig = lms.sign(message, pvt_key.pub_keys[-1], pvt_key.pvt_keys[-1])
+        return HssSerializer.serialize_hss_sig(pvt_key.levels - 1, pvt_key.pub_keys, pvt_key.pub_sigs, lms_sig)
+
+    def verify(self, message, sig, pub_key):
+        levels, pub_list, sig_list, lms_sig = HssSerializer.deserialize_hss_sig(sig)
+        if levels != pub_key.levels:
+            raise ValueError("invalid HSS level")
+
+        # verify the chain of signed public keys
+        key = pub_key.pub1
+        lms = Lms(key.lms_type, key.lmots_type)
+        i = key.i
+        k = key.k
+        for j in xrange(0, pub_key.levels - 1):
+            sig = sig_list[j]
+            msg = pub_list[j]
+            result = lms.verify(msg, sig, i, k)
+            if result is False:
+                return result
+            lms_type, lmots_type, i, k = LmsSerializer.deserialize_public_key(msg)
+
+        # TODO: why does key get re-assigned so many times?
+        return lms.verify(message, lms_sig, i, k)
