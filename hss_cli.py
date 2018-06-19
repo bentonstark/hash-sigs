@@ -46,7 +46,7 @@ from hss_pubkey import HssPublicKey
 from hss_pvtkey import HssPrivateKey
 from print_util import PrintUtl
 #from sig_tests import checksum_test, ntimesig_test
-#from hss_sig import print_hss_sig
+from hss_sig import print_hss_sig
 from utils import sha256_hash
 from hss import Hss
 from hss_serializer import HssSerializer
@@ -240,7 +240,7 @@ class HssMenu:
             in_file = open(file_name, 'r')
             file_data = in_file.read()
             if ".sig" in file_name:
-                e = True# print_hss_sig(file_data)
+                print_hss_sig(file_data)
             elif ".pub" in file_name:
                 lms_root_pub_key, levels = HssSerializer.deserialize_public_key(file_data)
                 hss_pub_key = HssPublicKey(root_pub=lms_root_pub_key, levels=levels)

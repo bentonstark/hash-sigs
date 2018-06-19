@@ -7,7 +7,7 @@ class LmsPublicKey(object):
     Leighton-Micali Signature Public Key
     """
 
-    def __init__(self, lms_type, lmots_type, i, k, nodes):
+    def __init__(self, lms_type, lmots_type, i, k, nodes=None):
         self.lms_type = lms_type
         self.lmots_type = lmots_type
         self.i = i

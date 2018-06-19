@@ -30,16 +30,16 @@ class HssSerializer:
         return lms_root_pub_key, levels
 
     @staticmethod
-    def serialize_hss_sig(levels_minus_one, pub_list, sig_list, msg_sig):
-        result = u32str(levels_minus_one)
-        for i in xrange(0, levels_minus_one):
-            result = result + sig_list[i]
-            result = result + LmsSerializer.serialize_public_key(pub_list[i + 1])
-        result = result + msg_sig
-        return result
+    def serialize_signature(levels, pub_list, sig_list, msg_sig):
+        serial_sig = u32str(levels - 1)
+        for i in xrange(0, levels - 1):
+            serial_sig = serial_sig + sig_list[i]
+            serial_sig = serial_sig + LmsSerializer.serialize_public_key(pub_list[i + 1])
+        serial_sig = serial_sig + msg_sig
+        return serial_sig
 
     @staticmethod
-    def deserialize_hss_sig(hex_value):
+    def deserialize_signature(hex_value):
         hss_max_levels = 8
         levels = hex_u32_to_int(hex_value[0:4]) + 1
         if levels > hss_max_levels:
@@ -48,7 +48,7 @@ class HssSerializer:
         publist = list()
         tmp = hex_value[4:]
         for i in xrange(0, levels - 1):
-            lms_sig, tmp = LmsSerializer.parse_lms_sig(tmp)
+            lms_sig, tmp = LmsSerializer.parse_signature(tmp)
             siglist.append(lms_sig)
             lms_pub, tmp = LmsSerializer.parse_public_key(tmp)
             publist.append(lms_pub)

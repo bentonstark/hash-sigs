@@ -88,10 +88,10 @@ class Hss:
         # sign message
         lms = Lms(self.lms_type, self.lmots_type)
         lms_sig = lms.sign(message, pvt_key.pub_keys[-1], pvt_key.pvt_keys[-1])
-        return HssSerializer.serialize_hss_sig(pvt_key.levels - 1, pvt_key.pub_keys, pvt_key.pub_sigs, lms_sig)
+        return HssSerializer.serialize_signature(pvt_key.levels, pvt_key.pub_keys, pvt_key.pub_sigs, lms_sig)
 
     def verify(self, message, sig, pub_key):
-        levels, pub_list, sig_list, lms_sig = HssSerializer.deserialize_hss_sig(sig)
+        levels, pub_list, sig_list, lms_sig = HssSerializer.deserialize_signature(sig)
         if levels != pub_key.levels:
             raise ValueError("invalid HSS level")
 

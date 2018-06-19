@@ -69,7 +69,7 @@ class LmsSerializer:
                + serialize_array(signature.path)
 
     @staticmethod
-    def deserialize_lms_sig(hex_value):
+    def deserialize_signature(hex_value):
         q = hex_u32_to_int(hex_value[0:4])
         lmots_type = LmsSerializer.get_lmots_type(hex_value)
         pos = 4 + LmotsSerializer.bytes(lmots_type)
@@ -86,7 +86,7 @@ class LmsSerializer:
         return lms_type, q, lmots_sig, path
 
     @staticmethod
-    def parse_lms_sig(hex_value):
+    def parse_signature(hex_value):
         lmots_type = LmotsType.get_by_type_code(hex_u32_to_int(hex_value[4:8]))
         pos = 4 + LmotsSerializer.bytes(lmots_type)
         lms_type = LmsType.get_by_type_code(hex_u32_to_int(hex_value[pos:pos + 4]))
