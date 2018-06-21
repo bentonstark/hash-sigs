@@ -1,7 +1,7 @@
 
 from utils import u32str
 from lmots_pubkey import LmotsPublicKey
-from print_util import PrintUtl
+from string_format import StringFormat
 from lmots_type import LmotsType
 
 
@@ -19,14 +19,19 @@ class LmotsPrivateKey:
         self.seed = seed
         self.signatures_remaining = signatures_remaining
 
-    def print_hex(self):
-        PrintUtl.print_line()
-        print "LMOTS private key"
-        PrintUtl.print_hex("LMOTS type", u32str(self.lmots_type.type_code), self.lmots_type.name)
-        PrintUtl.print_hex("S", self.s)
+    def __str__(self):
+        """
+        String representation of LMOTS private key object.
+        :return: string
+        """
+        s_list = list()
+        StringFormat.line(s_list)
+        s_list.append("LMOTS private key")
+        StringFormat.format_hex(s_list, "LMOTS type", u32str(self.lmots_type.type_code), self.lmots_type.name)
+        StringFormat.format_hex(s_list, "S", self.s)
         for i, x in enumerate(self.raw_key):
-            PrintUtl.print_hex("x[" + str(i) + "]", x)
-        PrintUtl.print_line()
-
+            StringFormat.format_hex(s_list, "x[" + str(i) + "]", x)
+        StringFormat.line(s_list)
+        return "\n".join(s_list)
 
 

@@ -1,11 +1,11 @@
 from utils import u32str, hex_u32_to_int, serialize_array
-from print_util import PrintUtl
+from string_format import StringFormat
 from lms_type import LmsType
 from lmots_type import LmotsType
 from lmots_serializer import LmotsSerializer
 
 
-class LmsSerializer:
+class LmsSerializer(object):
 
     @staticmethod
     def get_lms_type(hex_value):
@@ -99,15 +99,15 @@ class LmsSerializer:
         lms_type = LmsSerializer.get_lms_type(hex_value)
         lmots_type = LmsSerializer.get_lmots_type(hex_value)
 
-        PrintUtl.print_line()
+        StringFormat.line()
         print "LMS private key"
 
         seed = hex_value[8:8 + lmots_type.n]
         i = hex_value[8 + lmots_type.n:8 + lmots_type.n + lms_type.len_i]
         q = hex_u32_to_int(hex_value[8 + lmots_type.n + lms_type.len_i:8 + lmots_type.n + lms_type.len_i + 4])
-        PrintUtl.print_hex("lms_type", u32str(lms_type))
-        PrintUtl.print_hex("lmots_type", u32str(lmots_type))
-        PrintUtl.print_hex("seed", seed)
-        PrintUtl.print_hex("I", i)
-        PrintUtl.print_hex("leaf_num", u32str(q))
-        PrintUtl.print_line()
+        StringFormat.format_hex("lms_type", u32str(lms_type))
+        StringFormat.format_hex("lmots_type", u32str(lmots_type))
+        StringFormat.format_hex("seed", seed)
+        StringFormat.format_hex("I", i)
+        StringFormat.format_hex("leaf_num", u32str(q))
+        StringFormat.line()

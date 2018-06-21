@@ -1,7 +1,6 @@
 from utils import u32str, hex_u32_to_int
-from hss_pubkey import HssPublicKey
 from lms_pvtkey import LmsPrivateKey
-from print_util import PrintUtl
+from string_format import StringFormat
 
 
 class HssPrivateKey(object):
@@ -33,31 +32,27 @@ class HssPrivateKey(object):
         :param hex_value: string representing HSS private key
         :return:
         """
-        PrintUtl.print_line()
+        StringFormat.line()
         print "HSS private key"
         levels = hex_u32_to_int(hex_value[0:4])
-        PrintUtl.print_hex("levels", u32str(levels))
+        StringFormat.format_hex("levels", u32str(levels))
         print "prv[0]:"
         LmsPrivateKey.deserialize_print_hex(hex_value[4:])
-        PrintUtl.print_line()
+        StringFormat.line()
 
-    def print_hex(self):
-        PrintUtl.print_line()
-        print "HSS private key"
-        PrintUtl.print_hex("levels", u32str(self.levels))
+    def __str__(self):
+        """
+        String representation of HSS private key object.
+        :return: string
+        """
+        s_list = list()
+        StringFormat.line(s_list)
+        s_list.append("HSS private key")
+        StringFormat.format_hex(s_list, "levels", u32str(self.levels))
         for prv in self.pvt_keys:
-            prv.print_hex()
-        PrintUtl.print_line()
+            s_list.append(str(prv))
+        StringFormat.line(s_list)
+        return "\n".join(s_list)
 
-    @classmethod
-    def get_param_list(cls):
-        param_list = list()
-        for x in [ lmots_sha256_n32_w1 ]: # lmots_params.keys():
-            for y in [LMS_SHA256_M32_H05]: # lms_params.keys():
-                for l in [2,3]:
-                    param_list.append({'lmots_type': x, 'lms_type': y, 'levels': l})
-        return param_list
 
-    @classmethod
-    def get_public_key_class(cls):
-        return HssPublicKey
+

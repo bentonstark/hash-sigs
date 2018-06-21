@@ -44,7 +44,7 @@ import sys
 import os.path
 from hss_pubkey import HssPublicKey
 from hss_pvtkey import HssPrivateKey
-from print_util import PrintUtl
+from string_format import StringFormat
 #from sig_tests import checksum_test, ntimesig_test
 from hss_sig import print_hss_sig
 from utils import sha256_hash
@@ -100,7 +100,7 @@ def verify_check_string(path, buffer):
 # Similarly, the output of uname() could be included.
 
 
-class HssMenu:
+class HssMenu(object):
     # program name
     PROGRAM_NAME = "hss_cli"
     MENU_MAIN_DESC = "HSS program"
@@ -244,14 +244,16 @@ class HssMenu:
             elif ".pub" in file_name:
                 lms_root_pub_key, levels = HssSerializer.deserialize_public_key(file_data)
                 hss_pub_key = HssPublicKey(root_pub=lms_root_pub_key, levels=levels)
-                hss_pub_key.print_hex()
+                print(str(hss_pub_key))
             elif ".prv" in file_name:
                 # strip check string from start of buffer
                 HssPrivateKey.deserialize_print_hex(file_data[32:])
             else:
-                PrintUtl.print_line()
-                PrintUtl.print_hex("Message", file_data)
-                PrintUtl.print_line()
+                str_list = list()
+                StringFormat.line(str_list)
+                StringFormat.format_hex(str_list, "Message", file_data)
+                StringFormat.line(str_list)
+                print("\n".join(str_list))
 
 
 if __name__ == "__main__":

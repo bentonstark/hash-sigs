@@ -4,7 +4,7 @@ from utils import u32str, hex_u32_to_int
 from lms_pubkey import LmsPublicKey
 
 
-class HssSerializer:
+class HssSerializer(object):
 
     @staticmethod
     def serialize_public_key(public_key):

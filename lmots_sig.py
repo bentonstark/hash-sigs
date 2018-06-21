@@ -1,5 +1,5 @@
 from utils import u32str
-from print_util import PrintUtl
+from string_format import StringFormat
 from lmots_type import LmotsType
 
 
@@ -15,11 +15,18 @@ class LmotsSignature:
         self.y = y
         self.lmots_type = lmots_type
 
-    def print_hex(self):
-        PrintUtl.print_line()
-        print "LMOTS signature"
-        PrintUtl.print_hex("LMOTS type", u32str(self.lmots_type.type_code), self.lmots_type.name)
-        PrintUtl.print_hex("C", self.c)
+    def __str__(self):
+        """
+        String representation of LMOTS signature object.
+        :return: string
+        """
+        s_list = list()
+        StringFormat.line(s_list)
+        s_list.append("LMOTS signature")
+        StringFormat.format_hex(s_list, "LMOTS type", u32str(self.lmots_type.type_code), self.lmots_type.name)
+        StringFormat.format_hex(s_list, "C", self.c)
         for i, e in enumerate(self.y):
-            PrintUtl.print_hex("y[" + str(i) + "]", e)
-        PrintUtl.print_line()
+            StringFormat.format_hex(s_list, "y[" + str(i) + "]", e)
+        StringFormat.line(s_list)
+        return "\n".join(s_list)
+

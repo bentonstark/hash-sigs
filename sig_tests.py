@@ -71,8 +71,8 @@ def ntimesig_test_param(alg, verbose=False):
 
     if verbose:
         print "message: \"" + test_message + "\""
-        private_key.print_hex()
-        public_key.print_hex()
+        private_key.format_hex()
+        public_key.format_hex()
         print "num_signatures_remaining: " + str(private_key.signatures_remaining)
 
     for i in xrange(0, num_tests):
@@ -127,7 +127,7 @@ def ntimesig_test_param(alg, verbose=False):
         try:
             if alg.verify(test_message, mangled_sig, public_key):
                 print "failed: invalid signature accepted (mangled byte: " + str(mangled_sig_iterator.i) + ")"
-                public_key.deserialize(mangled_sig).print_hex()
+                public_key.deserialize(mangled_sig).format_hex()
                 sys.exit(1)
         except ValueError as err:
             if err[0] != "unknown LMOTS type code" and err[0] != "hex_value is wrong length":
@@ -147,7 +147,7 @@ def ntimesig_test_param(alg, verbose=False):
             public_key = public_key.deserialize(mangled_pub)
             if alg.verify(test_message, mangled_sig, public_key):
                 print "failed: invalid signature accepted (mangled byte: " + str(mangled_sig_iterator.i) + ")"
-                LmotsSignature.deserialize(mangled_sig).print_hex()
+                LmotsSignature.deserialize(mangled_sig).format_hex()
                 sys.exit(1)
         except ValueError as err:
             if err[0] != "unknown LMOTS type code" and err[0] != "hex_value is wrong length":

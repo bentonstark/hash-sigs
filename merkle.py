@@ -1,7 +1,7 @@
 from utils import u16str
 
 
-class Merkle:
+class Merkle(object):
 
     @staticmethod
     def coef(s, i, w):
