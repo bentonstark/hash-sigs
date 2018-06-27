@@ -44,13 +44,13 @@ class HssSerializer(object):
         levels = hex_u32_to_int(hex_value[0:4]) + 1
         if levels > hss_max_levels:
             raise ValueError("levels exceeds max level value")
-        siglist = list()
-        publist = list()
+        sig_list = list()
+        pub_list = list()
         tmp = hex_value[4:]
         for i in xrange(0, levels - 1):
             lms_sig, tmp = LmsSerializer.parse_signature(tmp)
-            siglist.append(lms_sig)
+            sig_list.append(lms_sig)
             lms_pub, tmp = LmsSerializer.parse_public_key(tmp)
-            publist.append(lms_pub)
+            pub_list.append(lms_pub)
         msg_sig = tmp
-        return levels, publist, siglist, msg_sig
+        return levels, pub_list, sig_list, msg_sig

@@ -21,7 +21,7 @@ class LmsPrivateKey:
         """
         s_list = list()
         StringFormat.line(s_list)
-        s_list.append("LMS public key")
+        s_list.append("LMS private key")
         StringFormat.format_hex(s_list, "LMS type", u32str(self.lms_type.type_code), self.lms_type.name)
         StringFormat.format_hex(s_list, "LMOTS_type", u32str(self.lmots_type.type_code), self.lms_type.name)
         StringFormat.format_hex(s_list, "I", self.i)

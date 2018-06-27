@@ -4,7 +4,7 @@ from lms_type import LmsType
 from lms import Lms
 from lms_serializer import LmsSerializer
 from hss_pvtkey import HssPrivateKey
-from hss_pvtkey import HssPublicKey
+from hss_pubkey import HssPublicKey
 from hss_serializer import HssSerializer
 
 

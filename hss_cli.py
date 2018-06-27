@@ -46,13 +46,18 @@ from hss_pubkey import HssPublicKey
 from hss_pvtkey import HssPrivateKey
 from string_format import StringFormat
 #from sig_tests import checksum_test, ntimesig_test
-from hss_sig import print_hss_sig
-from utils import sha256_hash
+from utils import sha256_hash, u32str, string_to_hex
 from hss import Hss
 from hss_serializer import HssSerializer
 import argparse
 from version import PROGRAM_VERSION
 from argparse import RawDescriptionHelpFormatter
+from lms_type import LmsType
+from lmots_type import LmotsType
+from lms_sig import LmsSignature
+from lms_serializer import LmsSerializer
+from lms_pubkey import LmsPublicKey
+
 
 
 # ***************************************************************
@@ -92,6 +97,25 @@ def verify_check_string(path, buffer):
         sys.exit(1)
     else:
         return buffer[32:]
+
+
+def print_hss_sig(sig):
+    levels, pub_list, sig_list, lms_sig = HssSerializer.deserialize_signature(sig)
+    s_list = list()
+    StringFormat.line(s_list)
+    s_list.append("HSS signature")
+    StringFormat.format_hex(s_list, "Nspk", u32str(levels - 1))
+    for i in xrange(0, levels - 1):
+        s_list.append("sig[" + str(i) + "]: ")
+        s_list.append(string_to_hex(sig_list[i]))
+        s_list.append("pub[" + str(i) + "]: ")
+        lms_type, lmots_type, i, k = LmsSerializer.deserialize_public_key(pub_list[i])
+        lms_pub_key = LmsPublicKey(lms_type=lms_type, lmots_type=lmots_type, i=i, k=k)
+        s_list.append(str(lms_pub_key))
+    s_list.append("final_signature: ")
+    s_list.append(string_to_hex(lms_sig))
+    sig_string = "\n".join(s_list)
+    print(sig_string)
 
 
 # Implementation note: it might be useful to add in the last-modified
@@ -177,7 +201,7 @@ class HssMenu(object):
 
     @staticmethod
     def gen_key_handler(args):
-        hss = Hss()
+        hss = Hss(lms_type=LmsType.LMS_SHA256_M32_H5, lmots_type=LmotsType.LMOTS_SHA256_M32_W8)
         hss_pub, hss_prv = hss.generate_key_pair()
         pvt_file_path = args.out + "/" + args.key_name + ".prv"
         pub_file_path = args.out + "/" + args.key_name + ".pub"
@@ -246,8 +270,11 @@ class HssMenu(object):
                 hss_pub_key = HssPublicKey(root_pub=lms_root_pub_key, levels=levels)
                 print(str(hss_pub_key))
             elif ".prv" in file_name:
-                # strip check string from start of buffer
-                HssPrivateKey.deserialize_print_hex(file_data[32:])
+                lms_root_pub_key, lms_root_pvt_key, levels, lms_type, lmots_type = HssSerializer.deserialize_private_key(file_data[32:])
+                hss = Hss(lms_type=lms_type, lmots_type=lmots_type)
+                hss_pub, hss_prv = hss.build_key_pair_from_root(levels=levels, lms_root_pub_key=lms_root_pub_key,
+                                                                lms_root_pvt_key=lms_root_pvt_key)
+                print(str(hss_prv))
             else:
                 str_list = list()
                 StringFormat.line(str_list)

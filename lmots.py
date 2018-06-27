@@ -106,14 +106,14 @@ class Lmots:
         c = self._entropy_source.read(self.lmots_type.n)
         hash_q = digest(self.lmots_type.hash_alg, pvt_key.s + c + message + D_MESG)
         v = hash_q + Merkle.checksum(hash_q, self.lmots_type.w, self.lmots_type.ls)
-        raw_sig = list()
+        y = list()
         for i, x in enumerate(pvt_key.raw_key):
             tmp = x
             for j in xrange(0, Merkle.coef(v, i, self.lmots_type.w)):
                 tmp = digest(self.lmots_type.hash_alg, pvt_key.s + tmp + u16str(i) + u8str(j) + D_ITER)
-            raw_sig.append(tmp)
+            y.append(tmp)
             pvt_key.signatures_remaining = 0
-        lmots_sig = LmotsSignature(c, raw_sig, pvt_key.lmots_type)
+        lmots_sig = LmotsSignature(c, y, pvt_key.lmots_type)
         return LmotsSerializer.serialize_signature(lmots_sig)
 
     def verify(self, message, signature, pub_key):

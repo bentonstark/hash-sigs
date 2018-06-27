@@ -1,5 +1,4 @@
-from utils import u32str, hex_u32_to_int
-from lms_pvtkey import LmsPrivateKey
+from utils import u32str
 from string_format import StringFormat
 
 
@@ -17,28 +16,9 @@ class HssPrivateKey(object):
 
     def num_signatures_remaining(self):
         unused = self.pvt_keys[0].num_signatures_remaining()
-        for i in xrange(1,self.levels):
+        for i in xrange(1, self.levels):
             unused = unused * self.pvt_keys[i].max_signatures() + self.pvt_keys[i].num_signatures_remaining()
         return unused
-
-    @classmethod
-    def deserialize_print_hex(cls, hex_value):
-        """
-        Parse all of the data elements of an HSS private key out of the string buffer.
-
-        Does not initialize an hss_private_key (as that initialization computes at least one
-        LMS public/private keypair, which can take a long time)
-
-        :param hex_value: string representing HSS private key
-        :return:
-        """
-        StringFormat.line()
-        print "HSS private key"
-        levels = hex_u32_to_int(hex_value[0:4])
-        StringFormat.format_hex("levels", u32str(levels))
-        print "prv[0]:"
-        LmsPrivateKey.deserialize_print_hex(hex_value[4:])
-        StringFormat.line()
 
     def __str__(self):
         """
