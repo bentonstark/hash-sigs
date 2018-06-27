@@ -1,8 +1,8 @@
 from utils import u32str
-from print_util import PrintUtl
+from string_format import StringFormat
 
 
-class LmsPrivateKey(object):
+class LmsPrivateKey:
     """
     Leighton-Micali Signature Private Key
     """
@@ -13,6 +13,22 @@ class LmsPrivateKey(object):
         self.seed = seed
         self.i = i
         self.leaf_num = q_init
+
+    def __str__(self):
+        """
+        String representation of LMS public key object.
+        :return: string
+        """
+        s_list = list()
+        StringFormat.line(s_list)
+        s_list.append("LMS private key")
+        StringFormat.format_hex(s_list, "LMS type", u32str(self.lms_type.type_code), self.lms_type.name)
+        StringFormat.format_hex(s_list, "LMOTS_type", u32str(self.lmots_type.type_code), self.lms_type.name)
+        StringFormat.format_hex(s_list, "I", self.i)
+        StringFormat.format_hex(s_list, "SEED", self.seed)
+        StringFormat.format_hex(s_list, "q", u32str(self.leaf_num))
+        StringFormat.line(s_list)
+        return "\n".join(s_list)
 
     def get_next_ots_priv_key(self):
         return self.priv[self.leaf_num]
@@ -25,25 +41,6 @@ class LmsPrivateKey(object):
 
     def max_signatures(self):
         return 2 ** self.lms_type.h
-
-    def print_hex(self):
-        PrintUtl.print_line()
-        print "LMS private key"
-        PrintUtl.print_hex("LMS type", u32str(self.lms_type.type_code), self.lms_type.name)
-        PrintUtl.print_hex("LMOTS_type", u32str(self.lmots_type.type_code), self.lmots_type.name)
-        PrintUtl.print_hex("I", self.i)
-        PrintUtl.print_hex("SEED", self.seed)
-        PrintUtl.print_hex("q", u32str(self.leaf_num))
-
-    def get_param_list(self):
-        # this just dump a name/value of the different combinations of LMOTS / LMS types
-        # to a list - seems to be for informational purposes
-        #param_list = list()
-        #for x in lmots_params.keys():
-        #    for y in lms_params.keys():
-        #        param_list.append({'lmots_type': x, 'lms_type': y})
-        #return param_list
-        return None
 
 
 

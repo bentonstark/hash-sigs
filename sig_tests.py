@@ -1,60 +1,17 @@
 import sys
 
 from merkle import Merkle
-from utils import u32str, hex_u32_to_int, string_to_hex
-from lms_sig import LmsSignature
+from utils import string_to_hex
 from lmots_sig import LmotsSignature
-from lms_pubkey import LmsPublicKey
 from sig_test_mangler import Mangler
-from print_util import PrintUtl
 from lms import Lms
 from lms_type import LmsType
 from lmots import Lmots
 from lmots_type import LmotsType
-from lms_serializer import LmsSerializer
+from hss_serializer import HssSerializer
 
 
 test_message = "Hello, world!"
-
-
-def serialize_hss_sig(levels_minus_one, pub_list, sig_list, msg_sig):
-    result = u32str(levels_minus_one)
-    for i in xrange(0, levels_minus_one):
-        result = result + sig_list[i]
-        result = result + LmsSerializer.serialize_public_key(pub_list[i + 1])
-    result = result + msg_sig
-    return result
-
-
-def deserialize_hss_sig(hex_value):
-    hss_max_levels = 8
-    levels = hex_u32_to_int(hex_value[0:4]) + 1
-    if levels > hss_max_levels:
-        raise ValueError("levels exceeds max level value")
-    siglist = list()
-    publist = list()
-    tmp = hex_value[4:]
-    for i in xrange(0, levels - 1):
-        lms_sig, tmp = LmsSerializer.parse_lms_sig(tmp)
-        siglist.append(lms_sig)
-        lms_pub, tmp = LmsSerializer.parse_public_key(tmp)
-        publist.append(lms_pub)
-    msg_sig = tmp
-    return levels, publist, siglist, msg_sig
-
-
-def print_hss_sig(sig):
-    levels, pub_list, sig_list, lms_sig = deserialize_hss_sig(sig)
-    PrintUtl.print_line()
-    print "HSS signature"
-    PrintUtl.print_hex("Nspk", u32str(levels - 1))
-    for i in xrange(0, levels - 1):
-        print "sig[" + str(i) + "]: "
-        LmsSignature.print_lms_sig(sig_list[i])
-        print "pub[" + str(i) + "]: "
-        LmsPublicKey.deserialize(pub_list[i]).print_hex()
-    print "final_signature: "
-    LmsSignature.print_lms_sig(lms_sig)
 
 
 def checksum_test():
@@ -107,15 +64,15 @@ def ntimesig_test_param(alg, verbose=False):
     # generate key pairs
     public_key, private_key = alg.generate_key_pair()
 
-    public_key_buffer = public_key.serialize()
+    public_key_buffer = HssSerializer.serialize_public_key(public_key)
 
     num_sigs = private_key.signatures_remaining
     num_tests = min(num_sigs, 4096)
 
     if verbose:
         print "message: \"" + test_message + "\""
-        private_key.print_hex()
-        public_key.print_hex()
+        private_key.format_hex()
+        public_key.format_hex()
         print "num_signatures_remaining: " + str(private_key.signatures_remaining)
 
     for i in xrange(0, num_tests):
@@ -170,7 +127,7 @@ def ntimesig_test_param(alg, verbose=False):
         try:
             if alg.verify(test_message, mangled_sig, public_key):
                 print "failed: invalid signature accepted (mangled byte: " + str(mangled_sig_iterator.i) + ")"
-                public_key.deserialize(mangled_sig).print_hex()
+                public_key.deserialize(mangled_sig).format_hex()
                 sys.exit(1)
         except ValueError as err:
             if err[0] != "unknown LMOTS type code" and err[0] != "hex_value is wrong length":
@@ -190,7 +147,7 @@ def ntimesig_test_param(alg, verbose=False):
             public_key = public_key.deserialize(mangled_pub)
             if alg.verify(test_message, mangled_sig, public_key):
                 print "failed: invalid signature accepted (mangled byte: " + str(mangled_sig_iterator.i) + ")"
-                LmotsSignature.deserialize(mangled_sig).print_hex()
+                LmotsSignature.deserialize(mangled_sig).format_hex()
                 sys.exit(1)
         except ValueError as err:
             if err[0] != "unknown LMOTS type code" and err[0] != "hex_value is wrong length":

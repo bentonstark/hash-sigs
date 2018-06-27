@@ -1,6 +1,6 @@
 from lmots_type import LmotsType
 from utils import u32str
-from print_util import PrintUtl
+from string_format import StringFormat
 
 
 class LmotsPublicKey:
@@ -15,10 +15,17 @@ class LmotsPublicKey:
         self.k = k
         self.lmots_type = lmots_type
 
-    def print_hex(self):
-        PrintUtl.print_line()
-        print "LMOTS public key"
-        PrintUtl.print_hex("LMOTS type", u32str(self.lmots_type.type_code), self.lmots_type.name)
-        PrintUtl.print_hex("S", self.s)
-        PrintUtl.print_hex("K", self.k)
-        PrintUtl.print_line()
+    def __str__(self):
+        """
+        String representation of LMOTS public key object.
+        :return: string
+        """
+        s_list = list()
+        StringFormat.line(s_list)
+        s_list.append("LMOTS public key")
+        StringFormat.format_hex(s_list, "LMOTS type", u32str(self.lmots_type.type_code), self.lmots_type.name)
+        StringFormat.format_hex(s_list, "S", self.s)
+        StringFormat.format_hex(s_list, "K", self.k)
+        StringFormat.line(s_list)
+        return "\n".join(s_list)
+

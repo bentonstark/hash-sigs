@@ -44,14 +44,20 @@ import sys
 import os.path
 from hss_pubkey import HssPublicKey
 from hss_pvtkey import HssPrivateKey
-from print_util import PrintUtl
-from sig_tests import print_hss_sig, checksum_test, ntimesig_test
-from utils import sha256_hash
+from string_format import StringFormat
+#from sig_tests import checksum_test, ntimesig_test
+from utils import sha256_hash, u32str, string_to_hex
 from hss import Hss
 from hss_serializer import HssSerializer
 import argparse
 from version import PROGRAM_VERSION
 from argparse import RawDescriptionHelpFormatter
+from lms_type import LmsType
+from lmots_type import LmotsType
+from lms_sig import LmsSignature
+from lms_serializer import LmsSerializer
+from lms_pubkey import LmsPublicKey
+
 
 
 # ***************************************************************
@@ -93,13 +99,32 @@ def verify_check_string(path, buffer):
         return buffer[32:]
 
 
+def print_hss_sig(sig):
+    levels, pub_list, sig_list, lms_sig = HssSerializer.deserialize_signature(sig)
+    s_list = list()
+    StringFormat.line(s_list)
+    s_list.append("HSS signature")
+    StringFormat.format_hex(s_list, "Nspk", u32str(levels - 1))
+    for i in xrange(0, levels - 1):
+        s_list.append("sig[" + str(i) + "]: ")
+        s_list.append(string_to_hex(sig_list[i]))
+        s_list.append("pub[" + str(i) + "]: ")
+        lms_type, lmots_type, i, k = LmsSerializer.deserialize_public_key(pub_list[i])
+        lms_pub_key = LmsPublicKey(lms_type=lms_type, lmots_type=lmots_type, i=i, k=k)
+        s_list.append(str(lms_pub_key))
+    s_list.append("final_signature: ")
+    s_list.append(string_to_hex(lms_sig))
+    sig_string = "\n".join(s_list)
+    print(sig_string)
+
+
 # Implementation note: it might be useful to add in the last-modified
 # time via os.path.getmtime(path), but it might be tricky to
 # predict/control that value, especially in a portable way.
 # Similarly, the output of uname() could be included.
 
 
-class HssMenu:
+class HssMenu(object):
     # program name
     PROGRAM_NAME = "hss_cli"
     MENU_MAIN_DESC = "HSS program"
@@ -176,14 +201,14 @@ class HssMenu:
 
     @staticmethod
     def gen_key_handler(args):
-        hss = Hss()
+        hss = Hss(lms_type=LmsType.LMS_SHA256_M32_H5, lmots_type=LmotsType.LMOTS_SHA256_M32_W8)
         hss_pub, hss_prv = hss.generate_key_pair()
         pvt_file_path = args.out + "/" + args.key_name + ".prv"
         pub_file_path = args.out + "/" + args.key_name + ".pub"
         prv_file = open(pvt_file_path, 'w')
-        prv_file.write(calc_check_string(pvt_file_path) + hss_prv.serialize())
+        prv_file.write(calc_check_string(pvt_file_path) + HssSerializer.serialize_private_key(hss_prv))
         pub_file = open(pub_file_path, 'w')
-        pub_file.write(hss_pub.serialize())
+        pub_file.write(HssSerializer.serialize_public_key(hss_pub))
 
     @staticmethod
     def sign_handler(args):
@@ -192,7 +217,11 @@ class HssMenu:
         prv_buf = prv_file.read()
         # deserialized the private key
         pvt_hex = verify_check_string(args.key_name + ".prv", prv_buf)
-        hss_pub, hss_prv = HssSerializer.deserialize_private_key(pvt_hex)
+        lms_root_pub_key, lms_root_pvt_key, levels, lms_type, lmots_type = HssSerializer.deserialize_private_key(pvt_hex)
+
+        hss = Hss(lms_type=lms_type, lmots_type=lmots_type)
+        hss_pub, hss_prv = hss.build_key_pair_from_root(levels=levels, lms_root_pub_key=lms_root_pub_key,
+                                                        lms_root_pvt_key=lms_root_pvt_key)
 
         # loop file list and sign each file with the specified private key
         for file_name in args.file_list:
@@ -201,10 +230,10 @@ class HssMenu:
             msg_file = open(file_name, 'r')
             msg = msg_file.read()
             # sign message
-            tmp_sig = hss_prv.sign(msg)
+            tmp_sig = hss.sign(msg, hss_prv)
             # update the private key file with notated changes (mark used up keys)
             prv_file.seek(0)
-            prv_file.write(calc_check_string(args.key_name + ".prv") + hss_prv.serialize())
+            prv_file.write(calc_check_string(args.key_name + ".prv") + HssSerializer.serialize_private_key(hss_prv))
             prv_file.truncate()
             # write the signature out to file
             sig = open(file_name + ".sig", "w")
@@ -213,7 +242,9 @@ class HssMenu:
     @staticmethod
     def verify_handler(args):
         pub_file = open(args.key_name + ".pub", 'r')
-        pub = HssPublicKey.deserialize(pub_file.read())
+        lms_root_pub_key, levels = HssSerializer.deserialize_public_key(pub_file.read())
+        hss_pub_key = HssPublicKey(root_pub=lms_root_pub_key, levels=levels)
+        hss = Hss(lms_type=lms_root_pub_key.lms_type, lmots_type=lms_root_pub_key.lmots_type)
         for file_name in args.file_list:
             sig_name = file_name + ".sig"
             print "verifying signature " + sig_name + " on file " + file_name + " with pubkey " + args.key_name + ".pub"
@@ -221,28 +252,35 @@ class HssMenu:
             sig = data_sig_file.read()
             data_file = open(file_name, 'r')
             msg = data_file.read()
-            result = pub.verify(msg, sig)
+            result = hss.verify(msg, sig, hss_pub_key)
             if result:
                 print "VALID"
             else:
-                print "INVALID (" + result + ")"
+                print "INVALID"
 
     @staticmethod
     def read_handler(args):
         for file_name in args.file_list:
             in_file = open(file_name, 'r')
-            buf = in_file.read()
+            file_data = in_file.read()
             if ".sig" in file_name:
-                print_hss_sig(buf)
+                print_hss_sig(file_data)
             elif ".pub" in file_name:
-                HssPublicKey.deserialize(buf).print_hex()
+                lms_root_pub_key, levels = HssSerializer.deserialize_public_key(file_data)
+                hss_pub_key = HssPublicKey(root_pub=lms_root_pub_key, levels=levels)
+                print(str(hss_pub_key))
             elif ".prv" in file_name:
-                # strip check string from start of buffer
-                HssPrivateKey.deserialize_print_hex(buf[32:])
+                lms_root_pub_key, lms_root_pvt_key, levels, lms_type, lmots_type = HssSerializer.deserialize_private_key(file_data[32:])
+                hss = Hss(lms_type=lms_type, lmots_type=lmots_type)
+                hss_pub, hss_prv = hss.build_key_pair_from_root(levels=levels, lms_root_pub_key=lms_root_pub_key,
+                                                                lms_root_pvt_key=lms_root_pvt_key)
+                print(str(hss_prv))
             else:
-                PrintUtl.print_line()
-                PrintUtl.print_hex("Message", buf)
-                PrintUtl.print_line()
+                str_list = list()
+                StringFormat.line(str_list)
+                StringFormat.format_hex(str_list, "Message", file_data)
+                StringFormat.line(str_list)
+                print("\n".join(str_list))
 
 
 if __name__ == "__main__":

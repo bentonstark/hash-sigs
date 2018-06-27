@@ -1,6 +1,7 @@
 from utils import u32str
-from lmots_sig import LmotsSignature
-from print_util import PrintUtl
+from string_format import StringFormat
+from lms_serializer import LmsSerializer
+from lmots_serializer import LmotsSerializer
 
 
 class LmsSignature:
@@ -12,13 +13,21 @@ class LmsSignature:
         self.signature = signature
         self.path = path
 
-    @staticmethod
-    def print_lms_sig(signature):
-        PrintUtl.print_line()
-        print "LMS signature"
-        lms_type, q, lmots_sig, path = LmsSignature.deserialize_lms_sig(signature)
-        PrintUtl.print_hex("q", u32str(q))
-        LmotsSignature.deserialize(lmots_sig).print_hex()
-        PrintUtl.print_hex("LMS type", u32str(lms_type.type_code), lms_type.name)
+    def __str__(self):
+        """
+        String representation of LMS signature object.
+        :return: string
+        """
+        s_list = list()
+        StringFormat.line(s_list)
+        s_list.append("LMS signature")
+        # TODO: we should not be deserializing here - we should be working directly with the signature object
+        lms_type, q, lmots_sig, path = LmsSerializer.deserialize_signature(self.signature)
+        StringFormat.format_hex(s_list, "q", u32str(q))
+        # TODO: we should not be deserializing here - we should be working directly with the signature object
+        sig = LmotsSerializer.deserialize_signature(lmots_sig)
+        s_list.append(str(sig))
+        StringFormat.format_hex(s_list, "LMS type", u32str(lms_type.type_code), lms_type.name)
         for i, e in enumerate(path):
-            PrintUtl.print_hex("path[" + str(i) + "]", e)
+            StringFormat.format_hex(s_list, "path[" + str(i) + "]", e)
+        return "\n".join(s_list)

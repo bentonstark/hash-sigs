@@ -93,7 +93,7 @@ class Lms:
         return LmsSerializer.serialize_signature(lms_sig)
 
     def verify(self, message, sig, i, k):
-        lms_type, q, lmots_sig, path = LmsSerializer.deserialize_lms_sig(sig)
+        lms_type, q, lmots_sig, path = LmsSerializer.deserialize_signature(sig)
 
         node_num = q + 2 ** self.lms_type.h
         if lms_type != self.lms_type:

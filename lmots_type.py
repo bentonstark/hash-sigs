@@ -12,18 +12,19 @@ class LmotsType(Enum):
         obj._value_ = value
         return obj
 
-    def __init__(self, n, p, w, ls, type_code):
+    def __init__(self, n, p, w, ls, hash_alg, type_code):
         self.n = n
         self.p = p
         self.w = w
         self.ls = ls
+        self.hash_alg = hash_alg
         self.type_code = type_code
 
-    #                      n    p  w  ls type_code
-    LMOTS_SHA256_M32_W1 = 32, 265, 1, 7, 0x00000001
-    LMOTS_SHA256_M32_W2 = 32, 133, 2, 6, 0x00000002
-    LMOTS_SHA256_M32_W4 = 32,  67, 4, 4, 0x00000003
-    LMOTS_SHA256_M32_W8 = 32,  34, 8, 0, 0x00000004
+    #                      n    p  w  ls hash_alg, type_code
+    LMOTS_SHA256_M32_W1 = 32, 265, 1, 7, 'sha256', 1
+    LMOTS_SHA256_M32_W2 = 32, 133, 2, 6, 'sha256', 2
+    LMOTS_SHA256_M32_W4 = 32,  67, 4, 4, 'sha256', 3
+    LMOTS_SHA256_M32_W8 = 32,  34, 8, 0, 'sha256', 4
 
     @staticmethod
     def get_by_type_code(type_code):

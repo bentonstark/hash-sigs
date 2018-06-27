@@ -1,7 +1,27 @@
 import binascii
 import struct
 
-from Crypto.Hash import SHA256
+from Crypto.Hash import SHA256, SHA224, SHA384, SHA512
+
+
+def digest(alg, x):
+    h = create_digest(alg)
+    h.update(x)
+    return h.digest()
+
+
+def create_digest(alg):
+    if alg == 'sha256':
+        h = SHA256.new()
+    elif alg == 'sha224':
+        h = SHA224.new()
+    elif alg == 'sha384':
+        h = SHA384.new()
+    elif alg == 'sha512':
+        h = SHA512.new()
+    else:
+        raise ValueError("unexpected hash algorithm")
+    return h
 
 
 def sha256_hash(x):
